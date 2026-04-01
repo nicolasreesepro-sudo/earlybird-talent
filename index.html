@@ -1609,7 +1609,7 @@ async function loadNotionCalls() {
       method: "POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
-        filter: {property:"Statut",select:{equals:"Call fait"}},
+        filter: {property:"Statut",select:{equals:"Call Fait"}},
         sorts: [{property:"Date du call",direction:"descending"}]
       })
     });
