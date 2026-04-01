@@ -454,7 +454,7 @@ input[type=range].fp-slider::-moz-range-thumb{
   </div>
 </div>
 
-<div id="nav">
+<div id="login-screen" style="position:fixed;inset:0;z-index:9999;background:#F5F5F7;display:flex;align-items:center;justify-content:center"><div style="background:#fff;border-radius:16px;padding:40px;width:360px;display:flex;flex-direction:column;align-items:center;gap:20px;box-shadow:0 4px 24px rgba(0,0,0,.08)"><div style="font-family:sans-serif;font-weight:800;font-size:24px">Earlybird<span style="color:#6366f1">Talent</span></div><input id="pwd-input" type="password" placeholder="Mot de passe" style="width:100%;padding:11px;border-radius:8px;border:1px solid #ddd;font-size:14px;text-align:center" onkeydown="if(event.key==='Enter')checkPwd()"><button onclick="checkPwd()" style="width:100%;padding:11px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer">Accéder</button><div id="pwd-error" style="display:none;color:red;font-size:12px">Mot de passe incorrect</div></div></div><div id="nav">
   <div class="nav-logo">E</div>
   <div class="nav-item active" data-page="search" onclick="navTo('search')">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13.5 13.5L17 17" stroke-linecap="round"/></svg>
@@ -1571,5 +1571,5 @@ updateRangeFill();
   }catch(e){}
 })();
 </script>
-</body>
+<script>(function(){var P="Nhresr892701?",K="eb-auth";function checkPwd(){var v=document.getElementById("pwd-input").value;if(v===P){try{sessionStorage.setItem(K,"1");}catch(e){}document.getElementById("login-screen").style.display="none";}else{document.getElementById("pwd-error").style.display="block";document.getElementById("pwd-input").value="";}}window.checkPwd=checkPwd;try{if(sessionStorage.getItem(K)==="1")document.getElementById("login-screen").style.display="none";}catch(e){}})();</script></body>
 </html>
