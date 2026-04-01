@@ -1,46 +1,46 @@
 module.exports = async function handler(req, res) {
+  // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const token = process.env.NOTION_TOKEN;
-  if (!token) return res.status(500).json({ error: "Token manquant" });
-
-  // Support both ?endpoint=... and path after /api/notion/
-  const url = require("url");
-  const parsed = url.parse(req.url, true);
-  const endpoint = parsed.query.endpoint ? decodeURIComponent(parsed.query.endpoint) : null;
-
-  if (!endpoint) return res.status(400).json({ error: "Endpoint manquant", url: req.url });
+  var token = process.env.NOTION_TOKEN;
+  if (!token) return res.status(500).json({ error: "NOTION_TOKEN manquant dans les variables Vercel" });
 
   try {
-    let body = undefined;
-    if (req.method !== "GET") {
-      if (typeof req.body === "string") {
-        body = req.body;
-      } else if (req.body && typeof req.body === "object") {
-        body = JSON.stringify(req.body);
-      } else {
-        body = "{}";
-      }
+    // GET: endpoint in query param
+    // POST: endpoint + body in JSON body
+    var endpoint, body, method;
+
+    if (req.method === "GET") {
+      endpoint = req.query.endpoint;
+      method = "GET";
+      body = undefined;
+    } else {
+      var parsed = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+      endpoint = parsed.endpoint;
+      body = parsed.body ? JSON.stringify(parsed.body) : "{}";
+      method = "POST";
     }
 
-    const notionRes = await fetch(`https://api.notion.com/v1/${endpoint}`, {
-      method: req.method,
+    if (!endpoint) return res.status(400).json({ error: "Endpoint manquant" });
+
+    var url = "https://api.notion.com/v1/" + endpoint;
+    var fetchRes = await fetch(url, {
+      method: method,
       headers: {
-        "Authorization": `Bearer ${token}`,
+        "Authorization": "Bearer " + token,
         "Notion-Version": "2022-06-28",
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
-      body: body,
+      body: method === "POST" ? body : undefined
     });
 
-    const text = await notionRes.text();
-    let data;
-    try { data = JSON.parse(text); } catch(e) { data = { raw: text }; }
-    return res.status(notionRes.status).json(data);
+    var text = await fetchRes.text();
+    var data;
+    try { data = JSON.parse(text); } catch (e) { data = { raw: text }; }
+    return res.status(fetchRes.status).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

@@ -1,8 +1,10 @@
 {
+  "rewrites": [
+    { "source": "/api/notion", "destination": "/api/notion" },
+    { "source": "/api/claude", "destination": "/api/claude" }
+  ],
   "functions": {
-    "api/notion.js": {
-      "memory": 128,
-      "maxDuration": 10
-    }
+    "api/notion.js": { "maxDuration": 30 },
+    "api/claude.js": { "maxDuration": 60 }
   }
 }

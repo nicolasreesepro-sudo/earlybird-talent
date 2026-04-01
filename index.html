@@ -472,6 +472,10 @@ input[type=range].fp-slider::-moz-range-thumb{
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="14" height="14" rx="1.5"/><path d="M7 8h2M11 8h2M7 12h2M11 12h2" stroke-linecap="round"/></svg>
     <span class="nav-tip">Entreprises</span>
   </div>
+  <div class="nav-item" data-page="sync" onclick="navTo('sync')">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3l3 3-3 3M6 17l-3-3 3-3" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 6H8a3 3 0 00-3 3M3 14h9a3 3 0 003-3" stroke-linecap="round"/></svg>
+    <span class="nav-tip">Sync Notion</span>
+  </div>
   <div class="nav-spacer"></div>
   <div class="nav-item" onclick="toggleTheme()" title="Thème">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="3.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.41 1.41M14.37 14.37l1.41 1.41M4.22 15.78l1.41-1.41M14.37 5.63l1.41-1.41" stroke-linecap="round"/></svg>
@@ -670,6 +674,27 @@ input[type=range].fp-slider::-moz-range-thumb{
       <div class="stub-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke-linecap="round"/></svg></div>
       <div class="stub-title">Param&egrave;tres</div>
       <div class="stub-desc">Export des notes, gestion des classifications, dark mode. Bient&ocirc;t.</div>
+    </div>
+  </div>
+
+  <!-- SYNC NOTION PAGE -->
+  <div id="page-sync" class="page">
+    <div class="page-topbar">
+      <span class="page-title">Sync Notion</span>
+      <span class="page-meta" id="sync-meta"></span>
+      <button class="btn-primary" onclick="syncFetchCalls()">Actualiser</button>
+    </div>
+    <div class="page-list" id="sync-list" style="padding:20px;">
+      <div style="text-align:center;color:var(--t3);padding:60px 20px;">
+        <div style="font-size:28px;opacity:.3;margin-bottom:12px;">
+          <svg width="32" height="32" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 3l3 3-3 3M6 17l-3-3 3-3" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 6H8a3 3 0 00-3 3M3 14h9a3 3 0 003-3" stroke-linecap="round"/></svg>
+        </div>
+        <div style="font-size:14px;font-weight:500;color:var(--t2);margin-bottom:6px;">Sync Notion</div>
+        <div style="font-size:12px;max-width:360px;margin:0 auto;line-height:1.6;">
+          Clique <strong>Actualiser</strong> pour importer les fiches avec statut &laquo;&nbsp;Call Fait&nbsp;&raquo; depuis ta database Notion.<br>
+          Les notes seront analys&eacute;es par Claude pour extraire les champs structur&eacute;s.
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1539,6 +1564,215 @@ function renderFilteredBrowse(candidates){
   bindCards(container);
 }
 
+// ── SYNC NOTION ──────────────────────────────────────────────────────
+var NOTION_DB_ID = "33577a179998805699abf7c1221b49ed";
+var SYNC_API_BASE = "/api/notion";
+var CLAUDE_API = "/api/claude";
+
+async function syncFetchCalls(){
+  var list = document.getElementById("sync-list");
+  var meta = document.getElementById("sync-meta");
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3);">Chargement depuis Notion&hellip;</div>';
+  meta.textContent = "";
+  try {
+    var res = await fetch(SYNC_API_BASE, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        endpoint: "databases/" + NOTION_DB_ID + "/query",
+        body: {
+          filter: { property: "Statut", select: { equals: "Call Fait" } }
+        }
+      })
+    });
+    if(!res.ok){
+      var errText = await res.text();
+      list.innerHTML = '<div class="no-results">Erreur API Notion (' + res.status + '): ' + esc(errText.substring(0,200)) + '</div>';
+      return;
+    }
+    var data = await res.json();
+    var pages = data.results || [];
+    meta.textContent = pages.length + " fiche" + (pages.length > 1 ? "s" : "") + " Call Fait";
+    if(!pages.length){
+      list.innerHTML = '<div class="no-results">Aucune fiche avec statut &laquo;&nbsp;Call Fait&nbsp;&raquo; dans Notion.</div>';
+      return;
+    }
+    var html = "";
+    pages.forEach(function(p){
+      var props = p.properties || {};
+      var nameArr = props["Name"] || props["Nom"] || {};
+      var title = "";
+      if(nameArr.title && nameArr.title.length) title = nameArr.title.map(function(t){return t.plain_text;}).join("");
+      var liUrl = "";
+      if(props["LinkedIn URL"] && props["LinkedIn URL"].url) liUrl = props["LinkedIn URL"].url;
+      var ranking = "";
+      if(props["Ranking"] && props["Ranking"].select) ranking = props["Ranking"].select.name;
+      var dateCall = "";
+      if(props["Date du call"] && props["Date du call"].date) dateCall = props["Date du call"].date.start || "";
+      var projet = "";
+      if(props["Projet / Client"]){
+        var rt = props["Projet / Client"].rich_text || [];
+        projet = rt.map(function(t){return t.plain_text;}).join("");
+      }
+      // Try to match with existing candidate
+      var matched = null;
+      if(liUrl){
+        var liSlug = liUrl.replace(/\/$/,"").split("/").pop().toLowerCase();
+        matched = ALL.find(function(c){ return c.id === liSlug || (c.li && c.li.toLowerCase().includes(liSlug)); });
+      }
+      html += '<div class="cd" style="cursor:pointer" onclick="syncOpenPage(\'' + esc(p.id) + '\',\'' + esc(title) + '\',\'' + esc(liUrl) + '\',' + (matched ? 'true' : 'false') + ')">'
+        + '<div class="av" style="background:' + (matched ? 'rgba(5,150,105,.1);color:#059669' : 'rgba(99,102,241,.1);color:#6366f1') + '">'
+        + (matched ? '&#x2713;' : '?') + '</div>'
+        + '<div class="ci">'
+        + '<div class="cn">' + esc(title) + '</div>'
+        + '<div class="hl">' + (ranking ? ranking + ' · ' : '') + (projet ? projet + ' · ' : '') + (dateCall || '') + '</div>'
+        + '<div class="tags">'
+        + (matched ? '<span class="tag-role" style="background:#059669">Match\u00e9</span>' : '<span class="tag-proj">Non match\u00e9</span>')
+        + (liUrl ? '<span class="tag-sn">' + esc(liUrl.split("/").pop()) + '</span>' : '<span class="tag-sn" style="color:#EF4444">Pas de LinkedIn URL</span>')
+        + '</div></div></div>';
+    });
+    list.innerHTML = html;
+  } catch(e){
+    list.innerHTML = '<div class="no-results">Erreur: ' + esc(e.message) + '</div>';
+  }
+}
+
+async function syncOpenPage(pageId, name, liUrl, hasMatch){
+  var list = document.getElementById("sync-list");
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3);">Lecture de la fiche &laquo;&nbsp;' + esc(name) + '&nbsp;&raquo;&hellip;</div>';
+  try {
+    // Fetch page blocks (content)
+    var res = await fetch(SYNC_API_BASE, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ endpoint: "blocks/" + pageId + "/children" })
+    });
+    if(!res.ok){ list.innerHTML = '<div class="no-results">Erreur lecture page: ' + res.status + '</div>'; return; }
+    var data = await res.json();
+    var blocks = data.results || [];
+    // Extract text from blocks
+    var notesText = blocks.map(function(b){
+      var rt = [];
+      if(b.type === "paragraph" && b.paragraph) rt = b.paragraph.rich_text || [];
+      else if(b.type === "heading_2" && b.heading_2) rt = b.heading_2.rich_text || [];
+      else if(b.type === "heading_3" && b.heading_3) rt = b.heading_3.rich_text || [];
+      else if(b.type === "bulleted_list_item" && b.bulleted_list_item) rt = b.bulleted_list_item.rich_text || [];
+      else if(b.type === "numbered_list_item" && b.numbered_list_item) rt = b.numbered_list_item.rich_text || [];
+      return rt.map(function(t){return t.plain_text;}).join("");
+    }).filter(Boolean).join("\n");
+    if(!notesText.trim()){
+      list.innerHTML = '<div class="no-results">Fiche vide \u2014 pas de notes \u00e0 extraire.</div>';
+      return;
+    }
+    // Show raw notes + extract button
+    list.innerHTML = '<div style="padding:4px;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
+      + '<span class="page-title">' + esc(name) + '</span>'
+      + '<div style="display:flex;gap:8px;">'
+      + '<button class="btn-filters" onclick="syncFetchCalls()">&larr; Retour</button>'
+      + '<button class="btn-primary" id="sync-extract-btn" onclick="syncExtract()">Extraire avec Claude</button>'
+      + '</div></div>'
+      + '<div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Notes brutes</div>'
+      + '<pre id="sync-raw" style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px;font-size:12px;color:var(--t2);white-space:pre-wrap;max-height:300px;overflow-y:auto;font-family:inherit;line-height:1.6;">' + esc(notesText) + '</pre>'
+      + '<div id="sync-extracted" style="margin-top:16px;"></div>'
+      + '</div>';
+    // Store data for extraction
+    window._syncData = { pageId: pageId, name: name, liUrl: liUrl, hasMatch: hasMatch, notes: notesText };
+  } catch(e){
+    list.innerHTML = '<div class="no-results">Erreur: ' + esc(e.message) + '</div>';
+  }
+}
+
+async function syncExtract(){
+  var sd = window._syncData;
+  if(!sd) return;
+  var btn = document.getElementById("sync-extract-btn");
+  btn.textContent = "Extraction en cours\u2026";
+  btn.disabled = true;
+  var extractDiv = document.getElementById("sync-extracted");
+  extractDiv.innerHTML = '<div style="color:var(--t3);font-size:12px;padding:12px;">Claude analyse les notes\u2026</div>';
+  try {
+    var prompt = 'Voici les notes de call d\'un recruteur sur un candidat. Extrais les champs suivants en JSON strict (sans markdown, sans explication). Si un champ n\'est pas mentionn\u00e9, mets null.\n\n'
+      + '{"cycle_vente": "transactionnel|court|long|enterprise|null", "acv": "string ou null", "dispo": "string ou null", "preavis": "string ou null", "langues": ["FR","EN",...] ou null, "package_actuel": "string ou null", "package_souhaite": "string ou null", "ranking": 1-4 ou null, "pros": ["..."] ou null, "cons": ["..."] ou null, "dealbreakers": "string ou null", "motivation_depart": "string ou null", "notes_cles": "r\u00e9sum\u00e9 en 2 phrases max"}\n\nNotes:\n' + sd.notes;
+    var res = await fetch(CLAUDE_API, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    if(!res.ok){
+      extractDiv.innerHTML = '<div class="no-results">Erreur Claude API: ' + res.status + '</div>';
+      btn.textContent = "R\u00e9essayer"; btn.disabled = false;
+      return;
+    }
+    var data = await res.json();
+    var text = (data.content || []).map(function(c){return c.text || "";}).join("");
+    // Try to parse JSON from response
+    var jsonMatch = text.match(/\{[\s\S]*\}/);
+    if(!jsonMatch){ extractDiv.innerHTML = '<div class="no-results">Claude n\'a pas retourn\u00e9 de JSON valide.</div>'; btn.textContent = "R\u00e9essayer"; btn.disabled = false; return; }
+    var extracted;
+    try { extracted = JSON.parse(jsonMatch[0]); } catch(e){ extractDiv.innerHTML = '<div class="no-results">JSON invalide: ' + esc(e.message) + '</div>'; btn.textContent = "R\u00e9essayer"; btn.disabled = false; return; }
+    // Render extracted fields
+    var fields = [
+      ["Cycle de vente", extracted.cycle_vente],
+      ["ACV", extracted.acv],
+      ["Disponibilit\u00e9", extracted.dispo],
+      ["Pr\u00e9avis", extracted.preavis],
+      ["Langues", extracted.langues ? extracted.langues.join(", ") : null],
+      ["Package actuel", extracted.package_actuel],
+      ["Package souhait\u00e9", extracted.package_souhaite],
+      ["Ranking", extracted.ranking ? extracted.ranking + "/4" : null],
+      ["Pros", extracted.pros ? extracted.pros.join(" \u00b7 ") : null],
+      ["Cons", extracted.cons ? extracted.cons.join(" \u00b7 ") : null],
+      ["Dealbreakers", extracted.dealbreakers],
+      ["Motivation", extracted.motivation_depart],
+      ["R\u00e9sum\u00e9", extracted.notes_cles]
+    ];
+    var html = '<div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:8px;">Champs extraits par Claude</div>';
+    html += '<div style="background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:12px;">';
+    fields.forEach(function(f){
+      if(f[1] === null || f[1] === undefined || f[1] === "null") return;
+      html += '<div style="display:flex;gap:10px;padding:5px 0;border-bottom:1px solid var(--b1);font-size:12px;">'
+        + '<span style="width:120px;flex-shrink:0;color:var(--t3);font-weight:500;">' + f[0] + '</span>'
+        + '<span style="color:var(--t1);">' + esc(String(f[1])) + '</span></div>';
+    });
+    html += '</div>';
+    // Import button
+    html += '<div style="display:flex;justify-content:flex-end;margin-top:12px;">'
+      + '<button class="btn-primary" onclick="syncImport()">Importer dans la fiche</button></div>';
+    extractDiv.innerHTML = html;
+    window._syncExtracted = extracted;
+    btn.textContent = "Extraire avec Claude"; btn.disabled = false;
+  } catch(e){
+    extractDiv.innerHTML = '<div class="no-results">Erreur: ' + esc(e.message) + '</div>';
+    btn.textContent = "R\u00e9essayer"; btn.disabled = false;
+  }
+}
+
+function syncImport(){
+  var sd = window._syncData;
+  var ex = window._syncExtracted;
+  if(!sd || !ex) return;
+  // Find or create candidate entry
+  var liSlug = sd.liUrl ? sd.liUrl.replace(/\/$/,"").split("/").pop().toLowerCase() : "";
+  var cand = liSlug ? ALL.find(function(c){ return c.id === liSlug; }) : null;
+  var key = liSlug || sd.name.toLowerCase().replace(/\s+/g,"-");
+  // Save extracted data to storage
+  var existing = xtr[key] || {};
+  existing.notionSync = ex;
+  existing.notionSyncDate = new Date().toISOString().slice(0,10);
+  if(ex.notes_cles && !existing.notes) existing.notes = ex.notes_cles;
+  xtr[key] = existing;
+  try { localStorage.setItem("eb-xtr-" + key, JSON.stringify(existing)); } catch(e){}
+  // Show confirmation
+  var extractDiv = document.getElementById("sync-extracted");
+  extractDiv.innerHTML += '<div style="margin-top:8px;padding:10px;background:var(--gn-bg);border:1px solid var(--gn-bd);border-radius:8px;font-size:12px;color:var(--gn);">'
+    + '\u2713 Import\u00e9 dans la fiche ' + esc(sd.name) + (cand ? '' : ' (nouveau)') + '</div>';
+}
+
 // ── BOOT ─────────────────────────────────────────────────────────────
 initTheme();
 initSearchPage();
@@ -1550,7 +1784,7 @@ updateRangeFill();
 </script>
 <script>
 (function(){
-  var PWD = "earlybird2026";
+  var PWD = "Nhresr892701?";
   var KEY = "eb-auth";
   function checkPwd(){
     var v = document.getElementById("pwd-input").value;
