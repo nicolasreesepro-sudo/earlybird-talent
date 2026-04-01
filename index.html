@@ -1659,7 +1659,7 @@ async function getPageContent(pageId) {
 async function extractWithClaude(name, content) {
   try {
     var prompt = "Tu es un assistant de recrutement. Voici les notes d'un call avec un candidat GTM. Extrais les informations structurées suivantes en JSON uniquement, sans markdown ni texte autour.\n\nNom du candidat: "+name+"\n\nNotes:\n"+content+"\n\nRetourne UNIQUEMENT ce JSON (pas de backticks, pas d'explication):\n{\n  \"cycle_vente\": \"Transactionnel|Court|Long|Enterprise|null\",\n  \"acv\": \"<5k€|5-20k€|20-100k€|>100k€|null\",\n  \"dispo\": \"Immédiate|1 mois|2-3 mois|À l'écoute|null\",\n  \"preavis\": \"Immédiat|1 mois|2 mois|3 mois|Négociable|null\",\n  \"langues\": \"FR|EN|FR+EN|Autre|null\",\n  \"package_actuel\": \"nombre en k€ ou null\",\n  \"package_souhaite\": \"nombre en k€ ou null\",\n  \"motivation\": \"Cherche activement|À l'écoute|Approché|null\",\n  \"dealbreakers\": \"texte court ou null\",\n  \"points_forts\": \"texte court ou null\",\n  \"points_faibles\": \"texte court ou null\",\n  \"ranking\": \"1|2|3|4|null\",\n  \"reference\": \"Oui|Non|null\"\n}";
-    var res = await fetch("https://api.anthropic.com/v1/messages", {
+    var res = await fetch("/api/claude"), {
       method:"POST",
       headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
