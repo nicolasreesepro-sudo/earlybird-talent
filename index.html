@@ -438,6 +438,44 @@ input[type=range].fp-slider::-moz-range-thumb{
 }
 .login-btn:hover{opacity:.88;}
 .login-error{font-size:12px;color:#dc2626;display:none;}
+
+#page-sync{background:var(--bg);}
+.sync-topbar{height:52px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0;}
+.sync-title{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:15px;flex:1;}
+.sync-meta{font-size:11px;color:var(--t3);}
+.sync-body{flex:1;overflow-y:auto;padding:16px 20px;}
+.sync-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--t3);}
+.sync-empty-ico{font-size:32px;opacity:.3;}
+.sync-empty-msg{font-size:13px;}
+.sync-card{background:var(--s1);border:0.5px solid var(--b1);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:border-color .1s;}
+.sync-card:hover{border-color:var(--b2);}
+.sync-card-head{padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.sync-av{width:34px;height:34px;border-radius:8px;background:var(--acc-bg);display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:11px;color:var(--acc-txt);flex-shrink:0;}
+.sync-info{flex:1;min-width:0;}
+.sync-name{font-size:13.5px;font-weight:600;color:var(--t1);letter-spacing:-.01em;}
+.sync-sub{font-size:11.5px;color:var(--t2);margin-top:1px;}
+.sync-status{font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;background:var(--am-bg);color:var(--am);border:0.5px solid var(--am-bd);flex-shrink:0;}
+.sync-status.matched{background:var(--gn-bg);color:var(--gn);border-color:var(--gn-bd);}
+.sync-status.unmatched{background:var(--am-bg);color:var(--am);border-color:var(--am-bd);}
+.sync-expand{display:none;border-top:0.5px solid var(--b1);}
+.sync-expand.open{display:block;}
+.sync-fields{padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sync-field{display:flex;flex-direction:column;gap:3px;}
+.sync-field-lbl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);}
+.sync-field-val{font-size:12px;color:var(--t1);background:var(--s2);border:0.5px solid var(--b1);border-radius:6px;padding:5px 9px;min-height:28px;}
+.sync-field-val.empty{color:var(--t3);font-style:italic;}
+.sync-notes{padding:0 16px 14px;display:flex;flex-direction:column;gap:3px;}
+.sync-notes-lbl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);}
+.sync-notes-val{font-size:12px;color:var(--t1);background:var(--s2);border:0.5px solid var(--b1);border-radius:6px;padding:8px 10px;line-height:1.6;white-space:pre-wrap;}
+.sync-actions{padding:10px 16px 14px;display:flex;align-items:center;gap:8px;border-top:0.5px solid var(--b1);}
+.sync-match-info{font-size:11px;color:var(--t3);flex:1;}
+.sync-match-info strong{color:var(--t2);}
+.btn-sync-apply{padding:7px 16px;background:var(--acc);color:#fff;border:none;border-radius:7px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:opacity .12s;}
+.btn-sync-apply:hover{opacity:.88;}
+.btn-sync-apply:disabled{opacity:.4;cursor:default;}
+.btn-sync-skip{padding:7px 12px;background:transparent;color:var(--t2);border:0.5px solid var(--b1);border-radius:7px;font-family:inherit;font-size:12px;cursor:pointer;transition:all .1s;}
+.btn-sync-skip:hover{border-color:var(--b2);}
+.sync-done{background:var(--gn-bg);border:0.5px solid var(--gn-bd);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:500;color:var(--gn);}
 </style>
 </head>
 <body>
@@ -476,6 +514,10 @@ input[type=range].fp-slider::-moz-range-thumb{
   <div class="nav-item" onclick="toggleTheme()" title="Thème">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="3.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.41 1.41M14.37 14.37l1.41 1.41M4.22 15.78l1.41-1.41M14.37 5.63l1.41-1.41" stroke-linecap="round"/></svg>
     <span class="nav-tip">Thème</span>
+  </div>
+  <div class="nav-item" data-page="sync" onclick="navTo('sync')">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10a6 6 0 0 1 10.5-4M16 10a6 6 0 0 1-10.5 4" stroke-linecap="round"/><path d="M14 6l.5-2.5 2.5.5M6 14l-.5 2.5-2.5-.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="nav-tip">Sync Notion</span>
   </div>
   <div class="nav-item" data-page="settings" onclick="navTo('settings')">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M4.93 4.93l1.41 1.41M13.66 13.66l1.41 1.41M4.93 15.07l1.41-1.41M13.66 6.34l1.41-1.41" stroke-linecap="round"/></svg>
@@ -662,6 +704,22 @@ input[type=range].fp-slider::-moz-range-thumb{
       <input id="co-search-input" type="text" placeholder="Filtrer par nom&hellip;" oninput="renderCompanies()">
     </div>
     <div class="page-list" id="co-list"></div>
+  </div>
+
+
+  <!-- SYNC PAGE -->
+  <div id="page-sync" class="page">
+    <div class="sync-topbar">
+      <div class="sync-title">Sync Notion</div>
+      <div class="sync-meta" id="sync-meta"></div>
+      <button class="btn-primary" onclick="loadNotionCalls()">&#x21BB; Actualiser</button>
+    </div>
+    <div class="sync-body" id="sync-body">
+      <div class="sync-empty">
+        <div class="sync-empty-ico">&#x21BB;</div>
+        <div class="sync-empty-msg">Clique sur Actualiser pour charger les calls Notion</div>
+      </div>
+    </div>
   </div>
 
   <!-- SETTINGS (stub) -->
@@ -1539,6 +1597,213 @@ function renderFilteredBrowse(candidates){
   bindCards(container);
 }
 
+
+// ── NOTION SYNC ──────────────────────────────────────────────────────
+var NOTION_DB = "33577a17999880f0a396ca5f3e1ea425";
+var notionPages = [];
+
+async function loadNotionCalls() {
+  document.getElementById("sync-body").innerHTML = '<div class="sync-empty"><div class="sync-empty-ico">&#x23F3;</div><div class="sync-empty-msg">Chargement...</div></div>';
+  try {
+    var res = await fetch("/api/notion?endpoint=databases/" + NOTION_DB + "/query", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        filter: {property:"Statut",select:{equals:"Call fait"}},
+        sorts: [{property:"Date du call",direction:"descending"}]
+      })
+    });
+    var data = await res.json();
+    if(!data.results)throw new Error("Erreur API Notion");
+    notionPages = data.results;
+    renderSyncCards();
+  } catch(e) {
+    document.getElementById("sync-body").innerHTML = '<div class="sync-empty"><div class="sync-empty-ico">&#x26A0;</div><div class="sync-empty-msg">Erreur: '+esc(e.message)+'</div></div>';
+  }
+}
+
+function getProp(page, name) {
+  var p = page.properties[name];
+  if(!p)return "";
+  if(p.type==="title")return (p.title[0]&&p.title[0].plain_text)||"";
+  if(p.type==="rich_text")return (p.rich_text[0]&&p.rich_text[0].plain_text)||"";
+  if(p.type==="url")return p.url||"";
+  if(p.type==="select")return (p.select&&p.select.name)||"";
+  if(p.type==="date")return (p.date&&p.date.start)||"";
+  if(p.type==="multi_select")return p.multi_select.map(function(s){return s.name;}).join(", ");
+  if(p.type==="number")return p.number!=null?String(p.number):"";
+  if(p.type==="checkbox")return p.checkbox?"Oui":"Non";
+  return "";
+}
+
+async function getPageContent(pageId) {
+  try {
+    var res = await fetch("/api/notion?endpoint=blocks/"+pageId+"/children");
+    var data = await res.json();
+    var text = "";
+    (data.results||[]).forEach(function(b) {
+      if(b.type==="paragraph"){var t=b.paragraph.rich_text.map(function(r){return r.plain_text;}).join(""); if(t)text+=t+"\n";}
+      else if(b.type==="heading_1"||b.type==="heading_2"||b.type==="heading_3"){
+        var key=b.type;var t=b[key].rich_text.map(function(r){return r.plain_text;}).join("");
+        if(t)text+="\n## "+t+"\n";
+      }
+      else if(b.type==="bulleted_list_item"||b.type==="numbered_list_item"){
+        var key=b.type;var t=b[key].rich_text.map(function(r){return r.plain_text;}).join("");
+        if(t)text+="• "+t+"\n";
+      }
+    });
+    return text.trim();
+  } catch(e){return "";}
+}
+
+async function extractWithClaude(name, content) {
+  try {
+    var prompt = "Tu es un assistant de recrutement. Voici les notes d'un call avec un candidat GTM. Extrais les informations structurées suivantes en JSON uniquement, sans markdown ni texte autour.\n\nNom du candidat: "+name+"\n\nNotes:\n"+content+"\n\nRetourne UNIQUEMENT ce JSON (pas de backticks, pas d'explication):\n{\n  \"cycle_vente\": \"Transactionnel|Court|Long|Enterprise|null\",\n  \"acv\": \"<5k€|5-20k€|20-100k€|>100k€|null\",\n  \"dispo\": \"Immédiate|1 mois|2-3 mois|À l'écoute|null\",\n  \"preavis\": \"Immédiat|1 mois|2 mois|3 mois|Négociable|null\",\n  \"langues\": \"FR|EN|FR+EN|Autre|null\",\n  \"package_actuel\": \"nombre en k€ ou null\",\n  \"package_souhaite\": \"nombre en k€ ou null\",\n  \"motivation\": \"Cherche activement|À l'écoute|Approché|null\",\n  \"dealbreakers\": \"texte court ou null\",\n  \"points_forts\": \"texte court ou null\",\n  \"points_faibles\": \"texte court ou null\",\n  \"ranking\": \"1|2|3|4|null\",\n  \"reference\": \"Oui|Non|null\"\n}";
+    var res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    var data = await res.json();
+    var text = data.content&&data.content[0]&&data.content[0].text||"";
+    return JSON.parse(text.replace(/```json|```/g,"").trim());
+  } catch(e){return null;}
+}
+
+function matchCandidate(liUrl, name) {
+  if(liUrl){
+    var clean=liUrl.toLowerCase().replace(/\/+$/,"");
+    var found=ALL.find(function(c){return c.li&&c.li.toLowerCase().replace(/\/+$/,"")==clean;});
+    if(found)return found;
+  }
+  if(name){
+    var nl=name.toLowerCase().trim();
+    var found=ALL.find(function(c){return (c.f+" "+c.l).toLowerCase()===nl;});
+    if(found)return found;
+  }
+  return null;
+}
+
+function renderSyncCards() {
+  var body=document.getElementById("sync-body");
+  if(!notionPages.length){
+    body.innerHTML='<div class="sync-empty"><div class="sync-empty-ico">&#x2713;</div><div class="sync-empty-msg">Aucun call à synchroniser</div></div>';
+    document.getElementById("sync-meta").textContent="";
+    return;
+  }
+  document.getElementById("sync-meta").textContent=notionPages.length+" call"+(notionPages.length>1?"s":"")+" à synchroniser";
+  body.innerHTML=notionPages.map(function(p,i){
+    var name=getProp(p,"Nom")||"Sans nom";
+    var li=getProp(p,"LinkedIn URL");
+    var statut=getProp(p,"Statut");
+    var date=getProp(p,"Date du call");
+    var candidate=matchCandidate(li,name);
+    var ini=name.split(" ").map(function(w){return w[0]||""}).slice(0,2).join("").toUpperCase();
+    var matchClass=candidate?"matched":"unmatched";
+    var matchLabel=candidate?"Trouvé: "+candidate.f+" "+candidate.l:"Non trouvé";
+    return '<div class="sync-card" id="scard-'+i+'">'+
+      '<div class="sync-card-head" onclick="toggleSyncCard('+i+')">'+
+      '<div class="sync-av">'+esc(ini)+'</div>'+
+      '<div class="sync-info"><div class="sync-name">'+esc(name)+'</div>'+
+      '<div class="sync-sub">'+(date?date+" · ":"")+esc(li||"Pas de LinkedIn")+'</div></div>'+
+      '<span class="sync-status '+matchClass+'">'+esc(matchLabel)+'</span>'+
+      '</div>'+
+      '<div class="sync-expand" id="sexp-'+i+'">'+
+      '<div style="padding:12px 16px;font-size:12px;color:var(--t3);">Chargement des notes...</div>'+
+      '</div></div>';
+  }).join("");
+}
+
+var expandedCards={};
+async function toggleSyncCard(i) {
+  var exp=document.getElementById("sexp-"+i);
+  if(exp.classList.contains("open")){exp.classList.remove("open");return;}
+  exp.classList.add("open");
+  if(expandedCards[i])return;
+  expandedCards[i]=true;
+  var p=notionPages[i];
+  var name=getProp(p,"Nom")||"Sans nom";
+  var li=getProp(p,"LinkedIn URL");
+  var candidate=matchCandidate(li,name);
+  exp.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--t3);">&#x23F3; Lecture des notes Notion...</div>';
+  var content=await getPageContent(p.id);
+  exp.innerHTML='<div style="padding:12px 16px;font-size:12px;color:var(--t3);">&#x1F9E0; Extraction par Claude...</div>';
+  var extracted=await extractWithClaude(name,content);
+  var fields=extracted||{};
+  var fieldHtml='<div class="sync-fields">'+
+    renderSyncField("Cycle de vente",fields.cycle_vente)+
+    renderSyncField("ACV",fields.acv)+
+    renderSyncField("Disponibilité",fields.dispo)+
+    renderSyncField("Préavis",fields.preavis)+
+    renderSyncField("Langues",fields.langues)+
+    renderSyncField("Package actuel",fields.package_actuel?(fields.package_actuel+"k€"):null)+
+    renderSyncField("Package souhaité",fields.package_souhaite?(fields.package_souhaite+"k€"):null)+
+    renderSyncField("Motivation",fields.motivation)+
+    renderSyncField("Ranking",fields.ranking)+
+    renderSyncField("Référence",fields.reference)+
+  '</div>';
+  if(fields.dealbreakers||fields.points_forts||fields.points_faibles){
+    fieldHtml+='<div class="sync-notes"><div class="sync-notes-lbl">Points forts</div><div class="sync-notes-val">'+(fields.points_forts||"—")+'</div></div>';
+    fieldHtml+='<div class="sync-notes"><div class="sync-notes-lbl">Points faibles</div><div class="sync-notes-val">'+(fields.points_faibles||"—")+'</div></div>';
+    fieldHtml+='<div class="sync-notes"><div class="sync-notes-lbl">Dealbreakers</div><div class="sync-notes-val">'+(fields.dealbreakers||"—")+'</div></div>';
+  }
+  if(content){
+    fieldHtml+='<div class="sync-notes"><div class="sync-notes-lbl">Notes brutes</div><div class="sync-notes-val" style="max-height:120px;overflow-y:auto;font-size:11px;">'+esc(content)+'</div></div>';
+  }
+  if(candidate&&extracted){syncExtracted[i]={candidateId:candidate.id,fields:extracted};}
+  var matchInfo=candidate?'Sera fusionné avec <strong>'+esc(candidate.f+" "+candidate.l)+'</strong>':"<strong>Candidat non trouvé</strong> — ne sera pas importé";
+  fieldHtml+='<div class="sync-actions"><div class="sync-match-info">'+matchInfo+'</div>'+
+    '<button class="btn-sync-skip" onclick="skipCard('+i+')">Ignorer</button>'+
+    (candidate?'<button class="btn-sync-apply" id="btnApply-'+i+'" onclick="doApplySync('+i+')">Importer &#x2192;</button>':"")+'</div>';
+  exp.innerHTML=fieldHtml;
+}
+
+function renderSyncField(label,val){
+  var isEmpty=!val||val==="null";
+  return '<div class="sync-field"><div class="sync-field-lbl">'+esc(label)+'</div><div class="sync-field-val'+(isEmpty?" empty":"")+'">'+esc(isEmpty?"—":val)+'</div></div>';
+}
+
+function skipCard(i){
+  var card=document.getElementById("scard-"+i);
+  card.style.opacity=".4";
+  card.style.pointerEvents="none";
+}
+
+var syncExtracted={};
+function doApplySync(i){
+  var d=syncExtracted[i];
+  if(!d)return;
+  applySync(i,d.candidateId,d.fields);
+}
+function applySync(i, candidateId, fields){
+
+  var ex=xtr[candidateId]||{};
+  var notes=ex.notes||"";
+  var additions=[];
+  if(fields.cycle_vente&&fields.cycle_vente!=="null")additions.push("Cycle: "+fields.cycle_vente);
+  if(fields.acv&&fields.acv!=="null")additions.push("ACV: "+fields.acv);
+  if(fields.dispo&&fields.dispo!=="null")additions.push("Dispo: "+fields.dispo);
+  if(fields.preavis&&fields.preavis!=="null")additions.push("Préavis: "+fields.preavis);
+  if(fields.langues&&fields.langues!=="null")additions.push("Langues: "+fields.langues);
+  if(fields.package_actuel&&fields.package_actuel!=="null")additions.push("Package actuel: "+fields.package_actuel+"k€");
+  if(fields.package_souhaite&&fields.package_souhaite!=="null")additions.push("Package souhaité: "+fields.package_souhaite+"k€");
+  if(fields.motivation&&fields.motivation!=="null")additions.push("Motivation: "+fields.motivation);
+  if(fields.ranking&&fields.ranking!=="null")additions.push("Ranking: "+fields.ranking+"/4");
+  if(fields.dealbreakers&&fields.dealbreakers!=="null")additions.push("Dealbreakers: "+fields.dealbreakers);
+  if(fields.points_forts&&fields.points_forts!=="null")additions.push("Points forts: "+fields.points_forts);
+  if(fields.points_faibles&&fields.points_faibles!=="null")additions.push("Points faibles: "+fields.points_faibles);
+  var newNote=(notes?notes+"\n\n":"")+"— Sync Notion "+new Date().toLocaleDateString("fr")+" —\n"+additions.join("\n");
+  xtr[candidateId]=Object.assign(ex,{notes:newNote});
+  try{if(window.storage)window.storage.set("c:"+candidateId,JSON.stringify(xtr[candidateId])).catch(function(){});}catch(e){}
+  var card=document.getElementById("scard-"+i);
+  var actions=card.querySelector(".sync-actions");
+  if(actions)actions.innerHTML='<span class="sync-done">&#x2713; Importé dans la fiche candidat</span>';
+}
+
 // ── BOOT ─────────────────────────────────────────────────────────────
 initTheme();
 initSearchPage();
@@ -1547,8 +1812,7 @@ loadStorage();
 updateRangeFill();
 updateRangeFill();
 
-</script>
-<script>
+
 (function(){
   var PWD = "Nhresr892701?";
   var KEY = "eb-auth";
