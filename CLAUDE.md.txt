@@ -1,0 +1,116 @@
+# PROMPT CONTEXTE — EarlybirdTalent Candidate Database
+
+## QUI JE SUIS
+Nicolas, solo GTM recruiter chez Early Bird Talent. Pre-Seed to Series A startups à Paris. Je recrute des Sales, Marketing, CS/Ops, CoS/Founder. Non-technique (pas dev), mais capable de suivre des instructions et configurer des outils. Un seul laptop de travail. €82k Q1 2026, €166k cash, 69 mois de runway.
+
+## CE QU'ON CONSTRUIT
+Un outil interne de base de données candidats — un "moteur de recall" personnel, pas un CRM/ATS. Fichier HTML unique déployé sur **earlybird-talent.vercel.app** via GitHub + Vercel.
+
+### Use case principal
+Un client me donne les specs d'un job → je tape en langage naturel dans l'outil → il me sort les candidats pertinents en Tier 0/1/2/3 → je partage mon écran avec le client.
+
+### 3 fonctions distinctes
+1. **Base marché** — tous les candidats sourcés, enrichis automatiquement avec MES règles de classification
+2. **Mémoire augmentée** — candidats avec qui j'ai parlé, avec mon jugement qualitatif (notes Notion)
+3. **Base de boîtes** — entreprises classifiées par industrie/nature/taille (386 boîtes déjà faites)
+
+## ARCHITECTURE & STACK
+- **Frontend** : fichier HTML unique avec JS embarqué, window.storage pour persistance locale
+- **Hosting** : Vercel (auto-deploy depuis GitHub)
+- **APIs proxy** : `/api/notion.js` et `/api/claude.js` en serverless Vercel (tokens en env vars)
+- **Notion** : outil de prise de notes pendant les calls, sync one-way vers l'app. DB "Candidate Calls" avec champs : Nom, LinkedIn URL, Projet/Client, Date du Call, Statut, Ranking
+- **PhantomBuster** : enrichissement LinkedIn (76 profils/jour, en cours sur ~4400 restants). Fournit : jobTitle, company, jobLocation, headline, allSkills, description, school, etc.
+- **Mot de passe app** : `Nhresr892701?` (sessionStorage)
+- **Déploiement** : `deploy-earlybird.bat` sur le Bureau (double-clic → push Git)
+- **Node.js** : installé (v24.14.1)
+
+## DONNÉES ACTUELLES
+- **4 984 candidats HireSweet** (nom, prénom, LinkedIn, jusqu'à 4 projets)
+- **574 candidats enrichis PhantomBuster** (avec titre, boîte, localisation, headline, skills)
+- **488 classifiés** par famille de rôle + séniorité
+- **86 Undefined** (profils atypiques)
+- **~1 525 candidats sans projet** (catégorie "Non assigné")
+- **386 entreprises classifiées** (industrie, nature produit, taille)
+
+## FRAMEWORK DE CLASSIFICATION (validé, documenté en markdown)
+
+### 11 familles IC
+| Famille | Titres clés |
+|---------|------------|
+| **Top of funnel** | SDR, BDR, MDR, ADR, Business Developer, Sales Representative, Sales Prospector |
+| **Bottom of funnel** | AE, Account Executive, Sales Executive, Inside Sales, Commercial, Full Cycle Sales, Founding Sales, Territory/Enterprise/Mid-Market Sales, Outbound Specialist |
+| **Manager** | Sales Manager, Team Lead, Head of Sales, VP Sales, CRO, CSO, Director of Sales |
+| **Farmer** | Account Manager (toutes variantes), Renewal Specialist |
+| **CSM** | CSM, Customer Success Manager, Onboarding Specialist, Implementation Manager, Customer Experience Manager |
+| **Ops** | Operations Manager, Founding Ops, Business Operations, Strategy & Operations, Project Manager |
+| **CoS/FA** | Chief of Staff, Founder Associate, Bras droit |
+| **Growth/Marketing** | Growth Hacker, Growth Manager, Demand Gen, Performance Marketing, Content/Brand/Product Marketing Manager, Community Manager |
+| **Partnerships** | Partnerships Manager, Alliances Manager, Channel Manager, Ecosystem Manager |
+| **RevOps** | Revenue Operations, Sales Ops, Marketing Ops, CS Ops |
+| **Sales Enablement** | Sales Enablement Manager |
+| **Pre-Sales** | Pre-Sales Engineer, Sales Engineer, Solution Engineer, Solutions Consultant, Technical Sales |
+
+### Séniorité (identique toutes familles, calculée sur les années DANS le rôle exact)
+- **Junior** : 0-2 ans
+- **Mid** : 2-5 ans
+- **Senior** : 5 ans+
+
+### Règle clé
+L'expérience se compte dans la famille de rôle, pas en expérience totale. 2 ans SDR + 2 ans AE = junior AE. Le matching de titres est intelligent (fuzzy, FR/EN, abréviations).
+
+### Logique de search NL
+- **Filtres éliminatoires** (pas de match = absent) : Rôle, Localisation
+- **Critères de tiering** (souples, font varier le tier) : Séniorité, Industrie (à venir), Salaire (à venir), Cycle de vente (à venir)
+- Tier 0 = tous critères souples OK / Tier 1 = 1 manquant / Tier 2 = 2 manquants / Tier 3 = 3 manquants
+
+## TAXONOMIE ENTREPRISES
+- **Industries** : Fintech (88), Martech (48), HRtech (39), SaaS généraliste, E-commerce, Healthtech, Legaltech, Proptech, Edtech, Foodtech, Mobility, Cybersecurity, AI/Data, Media, Sustainability, etc.
+- **Nature produit** : SaaS, Marketplace, Services, Hardware, D2C, Platform, API
+- **Taille** : 1-10, 11-50, 51-200, 201-500, 501-1000, 1001-5000, 5000+
+
+## ÉTAT ACTUEL DE L'APP (v7_9 + packages récents)
+
+### Ce qui marche
+- Login par mot de passe
+- 4 984 candidats chargés (données embarquées)
+- Recherche par nom
+- NL search avec tiering T0-T3 sur candidats enrichis
+- Filtres par famille de rôle et séniorité (lignes séparées)
+- Notes persistantes + date dernier contact (window.storage)
+- Pagination 50/page
+- LinkedIn direct depuis chaque carte
+- Navigation 4 pages : Recherche · Candidats · Projets · Entreprises (+ Add a company)
+- Design light/dark mode, Bricolage Grotesque typo
+- Sync Notion : lecture des fiches "Call Fait" fonctionne
+- Proxy Notion (`/api/notion`) fonctionnel
+- Proxy Claude (`/api/claude`) fonctionnel (nécessite crédits API Anthropic)
+- Messages d'erreur clairs pour crédits API épuisés
+
+### Ce qui est cassé / inachevé (là où on en était)
+- **Fiche candidat enrichie** — la donnée extraite par Claude (cycle vente, ACV, dispo, langues, ranking, pros/cons) est stockée mais INVISIBLE dans l'UI. Pas de vraie fiche candidat, juste un modal basique
+- **Page Candidats** — stub vide, devrait être une liste triée par dernière interaction avec indicateurs visuels
+- **Extraction Claude** — erreur 400 résolue (c'était les crédits vides). À retester maintenant que les crédits sont rechargés
+- **UX général** — encore moche, besoin de polish
+- **~4 400 candidats restants à enrichir** par PhantomBuster (en cours, 76/jour)
+
+## PROCHAINES ÉTAPES (dans l'ordre)
+1. **Fiche candidat enrichie** — quand on clique sur un candidat, voir TOUT : infos LinkedIn, infos call Notion, notes, ranking, pros/cons. Vraie fiche, pas un mini modal
+2. **Page Candidats fonctionnelle** — liste triée par dernière interaction, pastilles couleur selon niveau d'enrichissement
+3. **Polish UX de la sync** — après import, atterrir sur la fiche candidat
+4. **Tester extraction Claude** avec une vraie fiche Notion
+5. **Continuer enrichissement PhantomBuster** + classification batch quand complet
+
+## VISION FUTURE (pas pour maintenant)
+- Extension Chrome pour capturer les profils LinkedIn directement dans l'outil (remplace le flow CSV)
+- Connexion Notion bidirectionnelle
+- Base de boîtes comme outil de mapping séparé
+- Pipeline tracking par client
+- Alertes "candidat non contacté depuis X mois"
+
+## CONTRAINTES IMPORTANTES
+- Je suis NON-TECHNIQUE : si ça casse, je peux pas debug seul
+- Un seul laptop → window.storage OK
+- Le workflow de déploiement doit rester simple (deploy.bat)
+- Focus sur ce qui MARCHE plutôt que sur l'architecture parfaite
+- Pas de tâtonnement CLI aveugle (le problème des sessions précédentes)
+- Les fichiers doivent être testés/validés avant livraison
