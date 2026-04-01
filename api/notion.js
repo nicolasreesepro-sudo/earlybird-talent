@@ -20,8 +20,14 @@ module.exports = async function handler(req, res) {
     } else {
       var parsed = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
       endpoint = parsed.endpoint;
-      body = parsed.body ? JSON.stringify(parsed.body) : "{}";
-      method = "POST";
+      // Allow frontend to specify GET via method field (e.g. for reading blocks)
+      if (parsed.method === "GET") {
+        method = "GET";
+        body = undefined;
+      } else {
+        body = parsed.body ? JSON.stringify(parsed.body) : "{}";
+        method = "POST";
+      }
     }
 
     if (!endpoint) return res.status(400).json({ error: "Endpoint manquant" });
