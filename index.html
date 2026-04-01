@@ -1700,7 +1700,15 @@ async function syncExtract(){
       })
     });
     if(!res.ok){
-      extractDiv.innerHTML = '<div class="no-results">Erreur Claude API: ' + res.status + '</div>';
+      var errData = {}; try { errData = await res.json(); } catch(e){}
+      var errMsg = (errData.error && errData.error.message) || "Erreur inconnue";
+      var userMsg = "Erreur Claude API (" + res.status + ")";
+      if(errMsg.includes("credit balance")) userMsg = "\u26a0\ufe0f Cr\u00e9dits API \u00e9puis\u00e9s \u2014 va sur console.anthropic.com \u2192 Plans & Billing pour recharger.";
+      else if(errMsg.includes("invalid_api_key") || errMsg.includes("authentication")) userMsg = "\u26a0\ufe0f Cl\u00e9 API invalide \u2014 v\u00e9rifie ANTHROPIC_KEY dans les variables Vercel.";
+      else if(errMsg.includes("rate_limit")) userMsg = "\u26a0\ufe0f Rate limit \u2014 attends 1 minute et r\u00e9essaie.";
+      else if(errMsg.includes("overloaded")) userMsg = "\u26a0\ufe0f Claude est surcharg\u00e9 \u2014 r\u00e9essaie dans 30 secondes.";
+      else userMsg += ": " + errMsg.substring(0, 200);
+      extractDiv.innerHTML = '<div style="padding:16px;background:var(--am-bg);border:1px solid var(--am-bd);border-radius:8px;font-size:13px;color:var(--t1);line-height:1.6;">' + userMsg + '</div>';
       btn.textContent = "R\u00e9essayer"; btn.disabled = false;
       return;
     }
