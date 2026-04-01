@@ -649,26 +649,116 @@ input[type=range].fp-slider::-moz-range-thumb{
         <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:8px;height:8px;border-radius:50%;background:var(--t3);opacity:.4;"></span>Brut</span>
       </div>
     </div>
-    <div style="padding:10px 20px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
+    <div style="padding:10px 20px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;gap:10px;align-items:center;flex-shrink:0;">
       <input id="cand-search" type="text" placeholder="Rechercher par nom, r&ocirc;le, entreprise&hellip;" style="flex:1;min-width:200px;max-width:360px;background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:6px 12px;color:var(--t1);font-family:inherit;font-size:13px;outline:none;" oninput="renderCandidates()">
-      <div id="cand-role-chips" style="display:flex;gap:4px;flex-wrap:wrap;">
-        <button class="fp-chip active" data-crole="all" onclick="candToggleRole(this)">Tous</button>
-        <button class="fp-chip" data-crole="Bottom of funnel" onclick="candToggleRole(this)">AE</button>
-        <button class="fp-chip" data-crole="Top of funnel" onclick="candToggleRole(this)">SDR</button>
-        <button class="fp-chip" data-crole="CSM" onclick="candToggleRole(this)">CSM</button>
-        <button class="fp-chip" data-crole="Farmer" onclick="candToggleRole(this)">AM</button>
-        <button class="fp-chip" data-crole="Ops" onclick="candToggleRole(this)">Ops</button>
-        <button class="fp-chip" data-crole="CoS/FA" onclick="candToggleRole(this)">CoS</button>
-        <button class="fp-chip" data-crole="Growth/Marketing" onclick="candToggleRole(this)">Growth</button>
-      </div>
-      <div id="cand-sn-chips" style="display:flex;gap:4px;">
-        <button class="fp-chip active" data-csn="all" onclick="candToggleSn(this)">Tous</button>
-        <button class="fp-chip" data-csn="Junior" onclick="candToggleSn(this)">Junior</button>
-        <button class="fp-chip" data-csn="Mid" onclick="candToggleSn(this)">Mid</button>
-        <button class="fp-chip" data-csn="Senior" onclick="candToggleSn(this)">Senior</button>
+      <button class="btn-filters" id="cand-filter-btn" onclick="candToggleFilters()">
+        <svg class="btn-filters-ico" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M1 3h12M3 7h8M5 11h4" stroke-linecap="round"/></svg>
+        Filtres
+      </button>
+    </div>
+    <div id="cand-results-body" style="display:flex;flex:1;overflow:hidden;">
+      <div class="page-list" id="cand-list" style="flex:1;overflow-y:auto;padding:8px 14px;"></div>
+      <div id="cand-filter-panel" style="width:0;overflow:hidden;background:var(--s1);border-left:1px solid var(--b1);transition:width .2s cubic-bezier(.4,0,.2,1);flex-shrink:0;display:flex;flex-direction:column;">
+        <div class="fp-head">
+          <span class="fp-title">Filtres</span>
+          <button class="fp-reset" onclick="candResetFilters()">R&eacute;initialiser</button>
+        </div>
+        <div class="fp-body" style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:16px;">
+          <div class="fp-section">
+            <div class="fp-label">R&ocirc;le</div>
+            <div class="fp-chips" id="cand-role-chips">
+              <button class="fp-chip active" data-crole="all" onclick="candToggleRole(this)">Tous</button>
+              <button class="fp-chip" data-crole="Bottom of funnel" onclick="candToggleRole(this)">AE</button>
+              <button class="fp-chip" data-crole="Top of funnel" onclick="candToggleRole(this)">SDR</button>
+              <button class="fp-chip" data-crole="CSM" onclick="candToggleRole(this)">CSM</button>
+              <button class="fp-chip" data-crole="Farmer" onclick="candToggleRole(this)">AM</button>
+              <button class="fp-chip" data-crole="Ops" onclick="candToggleRole(this)">Ops</button>
+              <button class="fp-chip" data-crole="CoS/FA" onclick="candToggleRole(this)">CoS</button>
+              <button class="fp-chip" data-crole="Growth/Marketing" onclick="candToggleRole(this)">Growth</button>
+              <button class="fp-chip" data-crole="Partnerships" onclick="candToggleRole(this)">Partners</button>
+              <button class="fp-chip" data-crole="Pre-Sales" onclick="candToggleRole(this)">PreSales</button>
+              <button class="fp-chip" data-crole="RevOps" onclick="candToggleRole(this)">RevOps</button>
+              <button class="fp-chip" data-crole="Sales Manager" onclick="candToggleRole(this)">Sales Mgr</button>
+            </div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">S&eacute;niorit&eacute;</div>
+            <div class="fp-chips" id="cand-sn-chips">
+              <button class="fp-chip active" data-csn="all" onclick="candToggleSn(this)">Tous</button>
+              <button class="fp-chip" data-csn="Junior" onclick="candToggleSn(this)">Junior</button>
+              <button class="fp-chip" data-csn="Mid" onclick="candToggleSn(this)">Mid</button>
+              <button class="fp-chip" data-csn="Senior" onclick="candToggleSn(this)">Senior</button>
+            </div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">Ann&eacute;es d&rsquo;exp&eacute;rience</div>
+            <div class="fp-range">
+              <div class="fp-range-val">
+                <span id="cand-yrs-display">0 &ndash; 15 ans</span>
+              </div>
+              <div class="range-wrap">
+                <div class="range-track"></div>
+                <div class="range-fill" id="cand-range-fill"></div>
+                <input type="range" class="fp-slider" id="cand-slider-min" min="0" max="15" value="0" step="0.5" oninput="candOnSlider()">
+                <input type="range" class="fp-slider" id="cand-slider-max" min="0" max="15" value="15" step="0.5" oninput="candOnSlider()">
+              </div>
+            </div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">Localisation</div>
+            <div class="fp-chips" id="cand-loc-chips">
+              <button class="fp-chip active" data-cloc="all" onclick="candToggleLoc(this)">Toutes</button>
+              <button class="fp-chip" data-cloc="paris" onclick="candToggleLoc(this)">Paris</button>
+              <button class="fp-chip" data-cloc="london" onclick="candToggleLoc(this)">London</button>
+              <button class="fp-chip" data-cloc="remote" onclick="candToggleLoc(this)">Remote</button>
+              <button class="fp-chip" data-cloc="france" onclick="candToggleLoc(this)">France</button>
+            </div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">Industrie</div>
+            <div class="fp-chips" id="cand-ind-chips">
+              <button class="fp-chip active" data-cind="all" onclick="candToggleInd(this)">Toutes</button>
+              <button class="fp-chip" data-cind="fintech" onclick="candToggleInd(this)">Fintech</button>
+              <button class="fp-chip" data-cind="payments" onclick="candToggleInd(this)">Payments</button>
+              <button class="fp-chip" data-cind="martech" onclick="candToggleInd(this)">Martech</button>
+              <button class="fp-chip" data-cind="hrtech" onclick="candToggleInd(this)">HR Tech</button>
+              <button class="fp-chip" data-cind="ecommerce" onclick="candToggleInd(this)">E-commerce</button>
+              <button class="fp-chip" data-cind="crm-sales" onclick="candToggleInd(this)">CRM/Sales</button>
+              <button class="fp-chip" data-cind="healthtech" onclick="candToggleInd(this)">Health</button>
+              <button class="fp-chip" data-cind="cyber" onclick="candToggleInd(this)">Cyber</button>
+              <button class="fp-chip" data-cind="data" onclick="candToggleInd(this)">Data</button>
+              <button class="fp-chip" data-cind="ai" onclick="candToggleInd(this)">AI/ML</button>
+              <button class="fp-chip" data-cind="logistics" onclick="candToggleInd(this)">Logistics</button>
+              <button class="fp-chip" data-cind="foodtech" onclick="candToggleInd(this)">Food</button>
+            </div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">Nature du produit</div>
+            <div class="fp-chips" id="cand-nat-chips">
+              <button class="fp-chip active" data-cnat="all" onclick="candToggleNat(this)">Tous</button>
+              <button class="fp-chip" data-cnat="saas" onclick="candToggleNat(this)">SaaS</button>
+              <button class="fp-chip" data-cnat="ai-native" onclick="candToggleNat(this)">AI-native</button>
+              <button class="fp-chip" data-cnat="marketplace" onclick="candToggleNat(this)">Marketplace</button>
+              <button class="fp-chip" data-cnat="api-infra" onclick="candToggleNat(this)">API/Infra</button>
+              <button class="fp-chip" data-cnat="open-source" onclick="candToggleNat(this)">Open Source</button>
+              <button class="fp-chip" data-cnat="hardware" onclick="candToggleNat(this)">Hardware</button>
+              <button class="fp-chip" data-cnat="services" onclick="candToggleNat(this)">Services</button>
+            </div>
+          </div>
+          <div class="fp-section">
+            <div class="fp-label">Taille de la bo&icirc;te</div>
+            <div class="fp-chips" id="cand-size-chips">
+              <button class="fp-chip active" data-csize="all" onclick="candToggleSize(this)">Toutes</button>
+              <button class="fp-chip" data-csize="1-50" onclick="candToggleSize(this)">1&ndash;50</button>
+              <button class="fp-chip" data-csize="51-200" onclick="candToggleSize(this)">51&ndash;200</button>
+              <button class="fp-chip" data-csize="201-500" onclick="candToggleSize(this)">201&ndash;500</button>
+              <button class="fp-chip" data-csize="501-2000" onclick="candToggleSize(this)">501&ndash;2 000</button>
+              <button class="fp-chip" data-csize="2000+" onclick="candToggleSize(this)">2 000+</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="page-list" id="cand-list"></div>
   </div>
 
   <!-- PROJECTS PAGE (stub) -->
@@ -1642,7 +1732,15 @@ function syncImport(){
 
 
 // ── CANDIDATES PAGE ──────────────────────────────────────────────────
-var candRole="all",candSn="all";
+var candRole="all",candSn="all",candLoc="all",candInd="all",candNat="all",candSize="all",candMinY=0,candMaxY=15,candFiltersOpen=false;
+
+function candToggleFilters(){
+  candFiltersOpen=!candFiltersOpen;
+  var panel=document.getElementById("cand-filter-panel");
+  panel.style.width=candFiltersOpen?"256px":"0";
+  document.getElementById("cand-filter-btn").classList.toggle("active",candFiltersOpen);
+  if(candFiltersOpen)candUpdateRangeFill();
+}
 function candToggleRole(el){
   document.querySelectorAll("#cand-role-chips .fp-chip").forEach(function(c){c.classList.remove("active");});
   el.classList.add("active");candRole=el.dataset.crole;renderCandidates();
@@ -1650,6 +1748,79 @@ function candToggleRole(el){
 function candToggleSn(el){
   document.querySelectorAll("#cand-sn-chips .fp-chip").forEach(function(c){c.classList.remove("active");});
   el.classList.add("active");candSn=el.dataset.csn;renderCandidates();
+}
+function candToggleLoc(el){
+  document.querySelectorAll("#cand-loc-chips .fp-chip").forEach(function(c){c.classList.remove("active");});
+  el.classList.add("active");candLoc=el.dataset.cloc;renderCandidates();
+}
+function candToggleInd(el){
+  document.querySelectorAll("#cand-ind-chips .fp-chip").forEach(function(c){c.classList.remove("active");});
+  el.classList.add("active");candInd=el.dataset.cind;renderCandidates();
+}
+function candToggleNat(el){
+  document.querySelectorAll("#cand-nat-chips .fp-chip").forEach(function(c){c.classList.remove("active");});
+  el.classList.add("active");candNat=el.dataset.cnat;renderCandidates();
+}
+function candToggleSize(el){
+  document.querySelectorAll("#cand-size-chips .fp-chip").forEach(function(c){c.classList.remove("active");});
+  el.classList.add("active");candSize=el.dataset.csize;renderCandidates();
+}
+function candOnSlider(){
+  var mn=parseFloat(document.getElementById("cand-slider-min").value);
+  var mx=parseFloat(document.getElementById("cand-slider-max").value);
+  if(mn>mx-0.5){
+    if(this===document.getElementById("cand-slider-min"))document.getElementById("cand-slider-min").value=mx-0.5;
+    else document.getElementById("cand-slider-max").value=mn+0.5;
+    mn=parseFloat(document.getElementById("cand-slider-min").value);
+    mx=parseFloat(document.getElementById("cand-slider-max").value);
+  }
+  candMinY=mn;candMaxY=mx;
+  var mnS=mn===Math.floor(mn)?mn.toFixed(0):mn.toFixed(1);
+  var mxS=mx>=15?"15+":mx===Math.floor(mx)?mx.toFixed(0):mx.toFixed(1);
+  document.getElementById("cand-yrs-display").textContent=mnS+" \u2013 "+mxS+" ans";
+  candUpdateRangeFill();
+  renderCandidates();
+}
+function candUpdateRangeFill(){
+  var mn=parseFloat(document.getElementById("cand-slider-min").value);
+  var mx=parseFloat(document.getElementById("cand-slider-max").value);
+  var fill=document.getElementById("cand-range-fill");
+  fill.style.left=(mn/15)*100+"%";
+  fill.style.right=(100-(mx/15)*100)+"%";
+}
+function candResetFilters(){
+  candRole="all";candSn="all";candLoc="all";candInd="all";candNat="all";candSize="all";candMinY=0;candMaxY=15;
+  document.querySelectorAll("#cand-role-chips .fp-chip").forEach(function(c){c.classList.toggle("active",c.dataset.crole==="all");});
+  document.querySelectorAll("#cand-sn-chips .fp-chip").forEach(function(c){c.classList.toggle("active",c.dataset.csn==="all");});
+  document.querySelectorAll("#cand-loc-chips .fp-chip").forEach(function(c){c.classList.toggle("active",c.dataset.cloc==="all");});
+  document.querySelectorAll("#cand-ind-chips .fp-chip").forEach(function(c){c.classList.toggle("active",c.dataset.cind==="all");});
+  document.querySelectorAll("#cand-nat-chips .fp-chip").forEach(function(c){c.classList.toggle("active",c.dataset.cnat==="all");});
+  document.querySelectorAll("#cand-size-chips .fp-chip").forEach(function(c){c.classList.toggle("active",c.dataset.csize==="all");});
+  document.getElementById("cand-slider-min").value=0;
+  document.getElementById("cand-slider-max").value=15;
+  document.getElementById("cand-yrs-display").textContent="0 \u2013 15 ans";
+  candUpdateRangeFill();
+  renderCandidates();
+}
+function candMatchesFilters(c){
+  if(candRole!=="all"&&c.rf!==candRole)return false;
+  if(candSn!=="all"&&c.sn!==candSn)return false;
+  if(candLoc!=="all"){
+    var loc=(c.lo||"").toLowerCase();
+    var pats=NL_LOC_MAP_REF[candLoc]||[candLoc];
+    if(!pats.some(function(p){return loc.includes(p);}))return false;
+  }
+  if(candMinY>0||candMaxY<15){
+    if(c.yrs!=null){if(c.yrs<candMinY||c.yrs>candMaxY)return false;}
+  }
+  if(candInd!=="all"){var cInds=c.ind||[];if(!cInds.includes(candInd))return false;}
+  if(candNat!=="all"&&c.nat!==candNat)return false;
+  if(candSize!=="all"){
+    var SIZE_GR={"1-50":["1-10","11-50"],"51-200":["51-200"],"201-500":["201-500"],"501-2000":["501-1000","1001-5000"],"2000+":["5001-10000","10000+","1001-5000"]};
+    var allowed=SIZE_GR[candSize]||[candSize];
+    if(!allowed.includes(c.size||""))return false;
+  }
+  return true;
 }
 function getCandLevel(c){
   var ex=xtr[c.id]||{};
@@ -1666,8 +1837,7 @@ function renderCandidates(){
   var search=(document.getElementById("cand-search")||{}).value||"";
   var lower=search.toLowerCase();
   var filtered=ALL.filter(function(c){
-    if(candRole!=="all"&&c.rf!==candRole)return false;
-    if(candSn!=="all"&&c.sn!==candSn)return false;
+    if(!candMatchesFilters(c))return false;
     if(lower){
       var fn=c.f.toLowerCase(),ln=c.l.toLowerCase();
       var hl=(c.hl||"").toLowerCase(),jt=(c.jt||"").toLowerCase(),co=(c.co||"").toLowerCase();
@@ -1678,7 +1848,6 @@ function renderCandidates(){
     }
     return true;
   });
-  // Sort: by lastContact desc (most recent first), then enriched, then brut
   filtered.sort(function(a,b){
     var ea=xtr[a.id]||{},eb=xtr[b.id]||{};
     var da=ea.lastContact||"",db=eb.lastContact||"";
@@ -1704,12 +1873,12 @@ function renderCandidates(){
       +'<div class="ci">'
       +'<div class="cn">'+esc(c.f)+'\u202f'+esc(c.l)+'</div>'
       +(headline?'<div class="hl">'+esc(headline)+'</div>':"")
-      +'<div class="tags">'+(rfLabel?'<span class="tag-role">'+esc(rfLabel)+'</span>':"")+(c.sn?'<span class="tag-sn">'+esc(c.sn)+'</span>':"")+(contactStr?'<span class="tag-proj">'+contactStr+'</span>':"")+'</div>'
+      +'<div class="tags">'+(rfLabel?'<span class="tag-role">'+esc(rfLabel)+'</span>':"")+(c.sn?'<span class="tag-sn">'+esc(c.sn)+'</span>':"")+(contactStr?'<span class="tag-proj">'+contactStr+'</span>':"")+(c.lo?'<span class="tag-proj">'+esc(c.lo.split(",")[0])+'</span>':"")
+      +'</div>'
       +'</div>'
       +(c.li?'<a class="li-btn" href="'+esc(c.li)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">LI\u202f\u2197</a>':"")
       +'</div>';
   }).join("");
-  // Bind click to open modal
   list.querySelectorAll(".cd").forEach(function(el){
     el.onclick=function(e){if(!e.target.closest("a"))openModal(el.dataset.id);};
   });
