@@ -1641,12 +1641,8 @@ async function syncOpenPage(pageId, name, liUrl, hasMatch){
   var list = document.getElementById("sync-list");
   list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3);">Lecture de la fiche &laquo;&nbsp;' + esc(name) + '&nbsp;&raquo;&hellip;</div>';
   try {
-    // Fetch page blocks (content)
-    var res = await fetch(SYNC_API_BASE, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ endpoint: "blocks/" + pageId + "/children", method: "GET" })
-    });
+    // Fetch page blocks (content) — use GET like browser
+    var res = await fetch(SYNC_API_BASE + "?endpoint=" + encodeURIComponent("blocks/" + pageId + "/children"));
     if(!res.ok){ list.innerHTML = '<div class="no-results">Erreur lecture page: ' + res.status + '</div>'; return; }
     var data = await res.json();
     var blocks = data.results || [];
