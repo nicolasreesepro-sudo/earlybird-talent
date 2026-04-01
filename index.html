@@ -1605,7 +1605,7 @@ var notionPages = [];
 async function loadNotionCalls() {
   document.getElementById("sync-body").innerHTML = '<div class="sync-empty"><div class="sync-empty-ico">&#x23F3;</div><div class="sync-empty-msg">Chargement...</div></div>';
   try {
-    var res = await fetch("/api/notion?endpoint=databases/" + NOTION_DB + "/query", {
+    var res = await fetch("/api/notion?endpoint=" + encodeURIComponent("databases/" + NOTION_DB + "/query"), {
       method: "POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
@@ -1638,7 +1638,7 @@ function getProp(page, name) {
 
 async function getPageContent(pageId) {
   try {
-    var res = await fetch("/api/notion?endpoint=blocks/"+pageId+"/children");
+    var res = await fetch("/api/notion?endpoint=" + encodeURIComponent("blocks/"+pageId+"/children"));
     var data = await res.json();
     var text = "";
     (data.results||[]).forEach(function(b) {

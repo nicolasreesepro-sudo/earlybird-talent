@@ -8,8 +8,12 @@ module.exports = async function handler(req, res) {
   const token = process.env.NOTION_TOKEN;
   if (!token) return res.status(500).json({ error: "Token manquant" });
 
-  const { endpoint } = req.query;
-  if (!endpoint) return res.status(400).json({ error: "Endpoint manquant" });
+  // Support both ?endpoint=... and path after /api/notion/
+  const url = require("url");
+  const parsed = url.parse(req.url, true);
+  const endpoint = parsed.query.endpoint ? decodeURIComponent(parsed.query.endpoint) : null;
+
+  if (!endpoint) return res.status(400).json({ error: "Endpoint manquant", url: req.url });
 
   try {
     let body = undefined;
@@ -35,7 +39,7 @@ module.exports = async function handler(req, res) {
 
     const text = await notionRes.text();
     let data;
-    try { data = JSON.parse(text); } catch(e) { data = { error: text }; }
+    try { data = JSON.parse(text); } catch(e) { data = { raw: text }; }
     return res.status(notionRes.status).json(data);
   } catch (err) {
     return res.status(500).json({ error: err.message });
