@@ -637,38 +637,13 @@ input[type=range].fp-slider::-moz-range-thumb{
     </div>
   </div>
 
-  <!-- CANDIDATES PAGE -->
+  <!-- CANDIDATES PAGE (stub) -->
   <div id="page-candidates" class="page">
-    <div class="page-topbar">
-      <span class="page-title">Candidats</span>
-      <span class="page-meta" id="cand-count"></span>
-      <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
-        <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:8px;height:8px;border-radius:50%;background:#059669;"></span>Call fait</span>
-        <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:8px;height:8px;border-radius:50%;background:#6366f1;"></span>Not&eacute;</span>
-        <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:8px;height:8px;border-radius:50%;background:#8B5CF6;"></span>Enrichi</span>
-        <span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);"><span style="width:8px;height:8px;border-radius:50%;background:var(--t3);opacity:.4;"></span>Brut</span>
-      </div>
+    <div class="stub">
+      <div class="stub-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="7" r="3"/><path d="M2 17c0-3.31 2.69-6 6-6s6 2.69 6 6"/><circle cx="15" cy="7" r="2.5"/><path d="M18 17c0-2.76-1.34-5-3.5-5.5" stroke-linecap="round"/></svg></div>
+      <div class="stub-title">Page Candidats</div>
+      <div class="stub-desc">Vue compl&egrave;te de la base avec filtres avanc&eacute;s. En cours de construction.</div>
     </div>
-    <div style="padding:10px 20px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
-      <input id="cand-search" type="text" placeholder="Rechercher par nom, r&ocirc;le, entreprise&hellip;" style="flex:1;min-width:200px;max-width:360px;background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:6px 12px;color:var(--t1);font-family:inherit;font-size:13px;outline:none;" oninput="renderCandidates()">
-      <div id="cand-role-chips" style="display:flex;gap:4px;flex-wrap:wrap;">
-        <button class="fp-chip active" data-crole="all" onclick="candToggleRole(this)">Tous</button>
-        <button class="fp-chip" data-crole="Bottom of funnel" onclick="candToggleRole(this)">AE</button>
-        <button class="fp-chip" data-crole="Top of funnel" onclick="candToggleRole(this)">SDR</button>
-        <button class="fp-chip" data-crole="CSM" onclick="candToggleRole(this)">CSM</button>
-        <button class="fp-chip" data-crole="Farmer" onclick="candToggleRole(this)">AM</button>
-        <button class="fp-chip" data-crole="Ops" onclick="candToggleRole(this)">Ops</button>
-        <button class="fp-chip" data-crole="CoS/FA" onclick="candToggleRole(this)">CoS</button>
-        <button class="fp-chip" data-crole="Growth/Marketing" onclick="candToggleRole(this)">Growth</button>
-      </div>
-      <div id="cand-sn-chips" style="display:flex;gap:4px;">
-        <button class="fp-chip active" data-csn="all" onclick="candToggleSn(this)">Tous</button>
-        <button class="fp-chip" data-csn="Junior" onclick="candToggleSn(this)">Junior</button>
-        <button class="fp-chip" data-csn="Mid" onclick="candToggleSn(this)">Mid</button>
-        <button class="fp-chip" data-csn="Senior" onclick="candToggleSn(this)">Senior</button>
-      </div>
-    </div>
-    <div class="page-list" id="cand-list"></div>
   </div>
 
   <!-- PROJECTS PAGE (stub) -->
@@ -827,7 +802,7 @@ function navTo(page){
   var pg=document.getElementById("page-"+page);
   if(pg)pg.style.display="flex";
   if(page==="search"){document.getElementById("hero-input").focus();}
-  if(page==="companies"){renderCompanies();}if(page==="candidates"){renderCandidates();}
+  if(page==="companies"){renderCompanies();}
 }
 
 // ── SEARCH PAGE ──────────────────────────────────────────────────────
@@ -1638,81 +1613,6 @@ function syncImport(){
   var extractDiv = document.getElementById("sync-extracted");
   extractDiv.innerHTML += '<div style="margin-top:8px;padding:10px;background:var(--gn-bg);border:1px solid var(--gn-bd);border-radius:8px;font-size:12px;color:var(--gn);">'
     + '\u2713 Import\u00e9 dans la fiche ' + esc(sd.name) + (cand ? '' : ' (nouveau)') + '</div>';
-}
-
-
-// ── CANDIDATES PAGE ──────────────────────────────────────────────────
-var candRole="all",candSn="all";
-function candToggleRole(el){
-  document.querySelectorAll("#cand-role-chips .fp-chip").forEach(function(c){c.classList.remove("active");});
-  el.classList.add("active");candRole=el.dataset.crole;renderCandidates();
-}
-function candToggleSn(el){
-  document.querySelectorAll("#cand-sn-chips .fp-chip").forEach(function(c){c.classList.remove("active");});
-  el.classList.add("active");candSn=el.dataset.csn;renderCandidates();
-}
-function getCandLevel(c){
-  var ex=xtr[c.id]||{};
-  var hasCall=!!(ex.notionSync||ex.notionSyncDate);
-  var hasNotes=!!(ex.notes&&ex.notes.trim());
-  var hasContact=!!ex.lastContact;
-  if(hasCall)return{level:0,color:"#059669",label:"Call fait"};
-  if(hasNotes||hasContact)return{level:1,color:"#6366f1",label:"Not\u00e9"};
-  if(c.en)return{level:2,color:"#8B5CF6",label:"Enrichi"};
-  return{level:3,color:"var(--t3)",label:"Brut",opacity:.4};
-}
-function renderCandidates(){
-  var list=document.getElementById("cand-list");
-  var search=(document.getElementById("cand-search")||{}).value||"";
-  var lower=search.toLowerCase();
-  var filtered=ALL.filter(function(c){
-    if(candRole!=="all"&&c.rf!==candRole)return false;
-    if(candSn!=="all"&&c.sn!==candSn)return false;
-    if(lower){
-      var fn=c.f.toLowerCase(),ln=c.l.toLowerCase();
-      var hl=(c.hl||"").toLowerCase(),jt=(c.jt||"").toLowerCase(),co=(c.co||"").toLowerCase();
-      var rf=(c.rf||"").toLowerCase();
-      if(!fn.startsWith(lower)&&!ln.startsWith(lower)&&!hl.includes(lower)&&!jt.includes(lower)&&!co.includes(lower)&&!rf.includes(lower)
-        &&!fn.split(/[\s\-]+/).some(function(w){return w.startsWith(lower);})
-        &&!ln.split(/[\s\-]+/).some(function(w){return w.startsWith(lower);}))return false;
-    }
-    return true;
-  });
-  // Sort: by lastContact desc (most recent first), then enriched, then brut
-  filtered.sort(function(a,b){
-    var ea=xtr[a.id]||{},eb=xtr[b.id]||{};
-    var da=ea.lastContact||"",db=eb.lastContact||"";
-    if(da&&db)return db.localeCompare(da);
-    if(da)return-1;if(db)return 1;
-    var la=getCandLevel(a).level,lb=getCandLevel(b).level;
-    if(la!==lb)return la-lb;
-    return(a.l||"").localeCompare(b.l||"");
-  });
-  document.getElementById("cand-count").textContent=filtered.length.toLocaleString("fr")+" candidat"+(filtered.length>1?"s":"");
-  var shown=filtered.slice(0,100);
-  if(!shown.length){list.innerHTML='<div class="no-results">Aucun candidat pour ces filtres.</div>';return;}
-  list.innerHTML=shown.map(function(c){
-    var lv=getCandLevel(c);
-    var ex=xtr[c.id]||{};
-    var pal=avPal(c.f+c.l);
-    var ini=((c.f[0]||"")+(c.l[0]||"")).toUpperCase();
-    var headline=c.hl||(c.jt?(c.jt+(c.co?"\u202f\u00b7\u202f"+c.co:"")):"");
-    var rfLabel=c.rf?RF_SHORT[c.rf]||c.rf:"";
-    var contactStr=ex.lastContact?fdt(ex.lastContact):"";
-    return'<div class="cd" data-id="'+esc(c.id)+'" style="border-left:3px solid '+lv.color+';">'
-      +'<div class="av" style="background:'+pal.bg+';color:'+pal.fg+'">'+ini+'</div>'
-      +'<div class="ci">'
-      +'<div class="cn">'+esc(c.f)+'\u202f'+esc(c.l)+'</div>'
-      +(headline?'<div class="hl">'+esc(headline)+'</div>':"")
-      +'<div class="tags">'+(rfLabel?'<span class="tag-role">'+esc(rfLabel)+'</span>':"")+(c.sn?'<span class="tag-sn">'+esc(c.sn)+'</span>':"")+(contactStr?'<span class="tag-proj">'+contactStr+'</span>':"")+'</div>'
-      +'</div>'
-      +(c.li?'<a class="li-btn" href="'+esc(c.li)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">LI\u202f\u2197</a>':"")
-      +'</div>';
-  }).join("");
-  // Bind click to open modal
-  list.querySelectorAll(".cd").forEach(function(el){
-    el.onclick=function(e){if(!e.target.closest("a"))openModal(el.dataset.id);};
-  });
 }
 
 // ── BOOT ─────────────────────────────────────────────────────────────
