@@ -1562,18 +1562,6 @@ function applyFilters(){
 var NOTION_DB_ID = "33577a179998805699abf7c1221b49ed";
 var SYNC_API_BASE = "/api/notion";
 var CLAUDE_API = "/api/claude";
-var syncQueue = [];  // pages still to import
-var syncQueueIdx = 0;
-var syncTotalNew = 0;
-var syncTotalDone = 0;
-
-function isSynced(pageId, liUrl, name){
-  // Check if already imported by looking for notionSync in xtr
-  var liSlug = liUrl ? liUrl.replace(/\/$/,"").split("/").pop().toLowerCase() : "";
-  var key = liSlug || name.toLowerCase().replace(/\s+/g,"-");
-  var ex = xtr[key] || {};
-  return !!(ex.notionSync);
-}
 
 async function syncFetchCalls(){
   var list = document.getElementById("sync-list");
@@ -1598,12 +1586,13 @@ async function syncFetchCalls(){
     }
     var data = await res.json();
     var pages = data.results || [];
+    meta.textContent = pages.length + " fiche" + (pages.length > 1 ? "s" : "") + " Call Fait";
     if(!pages.length){
       list.innerHTML = '<div class="no-results">Aucune fiche avec statut &laquo;&nbsp;Call Fait&nbsp;&raquo; dans Notion.</div>';
       return;
     }
-    // Parse all pages
-    var allPages = pages.map(function(p){
+    var html = "";
+    pages.forEach(function(p){
       var props = p.properties || {};
       var nameArr = props["Name"] || props["Nom"] || {};
       var title = "";
@@ -1619,50 +1608,21 @@ async function syncFetchCalls(){
         var rt = props["Projet / Client"].rich_text || [];
         projet = rt.map(function(t){return t.plain_text;}).join("");
       }
-      var liSlug = liUrl ? liUrl.replace(/\/$/,"").split("/").pop().toLowerCase() : "";
-      var matched = liSlug ? ALL.find(function(c){ return c.id === liSlug || (c.li && c.li.toLowerCase().includes(liSlug)); }) : null;
-      var synced = isSynced(p.id, liUrl, title);
-      return {id:p.id, title:title, liUrl:liUrl, ranking:ranking, dateCall:dateCall, projet:projet, matched:!!matched, synced:synced};
-    });
-    // Split into new vs already synced
-    var newPages = allPages.filter(function(p){return !p.synced;});
-    var donPages = allPages.filter(function(p){return p.synced;});
-    syncTotalNew = newPages.length;
-    syncTotalDone = donPages.length;
-    // Store queue for batch mode
-    syncQueue = newPages;
-    syncQueueIdx = 0;
-    // Update meta
-    var metaParts = [];
-    if(syncTotalNew) metaParts.push(syncTotalNew + " nouvelle" + (syncTotalNew>1?"s":""));
-    if(syncTotalDone) metaParts.push(syncTotalDone + " d\u00e9j\u00e0 sync\u00e9e" + (syncTotalDone>1?"s":""));
-    meta.textContent = metaParts.join(" \u00b7 ") + " \u2014 " + allPages.length + " Call Fait au total";
-    if(!newPages.length){
-      list.innerHTML = '<div class="no-results" style="padding:60px 20px;">'
-        + '<div style="font-size:32px;margin-bottom:12px;">\u2713</div>'
-        + '<div style="font-size:14px;font-weight:500;color:var(--t2);margin-bottom:6px;">Tout est \u00e0 jour</div>'
-        + '<div style="font-size:12px;color:var(--t3);">' + syncTotalDone + ' fiche' + (syncTotalDone>1?'s':'') + ' d\u00e9j\u00e0 sync\u00e9e' + (syncTotalDone>1?'s':'') + '. Aucune nouvelle \u00e0 importer.</div>'
-        + '</div>';
-      return;
-    }
-    // Render only NEW pages
-    var html = '';
-    if(newPages.length > 1){
-      html += '<div style="padding:8px 2px 12px;display:flex;align-items:center;justify-content:space-between;">'
-        + '<span style="font-size:12px;color:var(--t2);">' + newPages.length + ' fiche' + (newPages.length>1?'s':'') + ' \u00e0 traiter</span>'
-        + '<button class="btn-primary" onclick="syncBatchStart()">Traiter tout (' + newPages.length + ')</button>'
-        + '</div>';
-    }
-    newPages.forEach(function(p, i){
-      html += '<div class="cd" style="cursor:pointer" onclick="syncOpenPage(\'' + esc(p.id) + '\',\'' + esc(p.title) + '\',\'' + esc(p.liUrl) + '\',' + (p.matched ? 'true' : 'false') + ')">'
-        + '<div class="av" style="background:' + (p.matched ? 'rgba(16,185,129,.1);color:#10B981' : 'rgba(108,92,231,.1);color:#6C5CE7') + '">'
-        + (p.matched ? '&#x2713;' : '?') + '</div>'
+      // Try to match with existing candidate
+      var matched = null;
+      if(liUrl){
+        var liSlug = liUrl.replace(/\/$/,"").split("/").pop().toLowerCase();
+        matched = ALL.find(function(c){ return c.id === liSlug || (c.li && c.li.toLowerCase().includes(liSlug)); });
+      }
+      html += '<div class="cd" style="cursor:pointer" onclick="syncOpenPage(\'' + esc(p.id) + '\',\'' + esc(title) + '\',\'' + esc(liUrl) + '\',' + (matched ? 'true' : 'false') + ')">'
+        + '<div class="av" style="background:' + (matched ? 'rgba(5,150,105,.1);color:#059669' : 'rgba(99,102,241,.1);color:#6366f1') + '">'
+        + (matched ? '&#x2713;' : '?') + '</div>'
         + '<div class="ci">'
-        + '<div class="cn">' + esc(p.title) + '</div>'
-        + '<div class="hl">' + (p.ranking ? p.ranking + ' \u00b7 ' : '') + (p.projet ? p.projet + ' \u00b7 ' : '') + (p.dateCall || '') + '</div>'
+        + '<div class="cn">' + esc(title) + '</div>'
+        + '<div class="hl">' + (ranking ? ranking + ' · ' : '') + (projet ? projet + ' · ' : '') + (dateCall || '') + '</div>'
         + '<div class="tags">'
-        + (p.matched ? '<span class="tag-role">Match\u00e9</span>' : '<span class="tag-proj">Non match\u00e9</span>')
-        + (p.liUrl ? '<span class="tag-sn">' + esc(p.liUrl.split("/").pop()) + '</span>' : '<span class="tag-sn" style="color:var(--rd)">Pas de LinkedIn URL</span>')
+        + (matched ? '<span class="tag-role" style="background:#059669">Match\u00e9</span>' : '<span class="tag-proj">Non match\u00e9</span>')
+        + (liUrl ? '<span class="tag-sn">' + esc(liUrl.split("/").pop()) + '</span>' : '<span class="tag-sn" style="color:#EF4444">Pas de LinkedIn URL</span>')
         + '</div></div></div>';
     });
     list.innerHTML = html;
@@ -1671,25 +1631,16 @@ async function syncFetchCalls(){
   }
 }
 
-function syncBatchStart(){
-  if(!syncQueue.length) return;
-  syncQueueIdx = 0;
-  var p = syncQueue[0];
-  syncOpenPage(p.id, p.title, p.liUrl, p.matched);
-}
-
 async function syncOpenPage(pageId, name, liUrl, hasMatch){
   var list = document.getElementById("sync-list");
-  // Find current index in queue
-  var qIdx = syncQueue.findIndex(function(p){return p.id === pageId;});
-  if(qIdx >= 0) syncQueueIdx = qIdx;
-  var progress = syncQueue.length > 1 ? '<span style="font-size:11px;color:var(--t3);margin-left:8px;">' + (syncQueueIdx+1) + '/' + syncQueue.length + '</span>' : '';
   list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3);">Lecture de la fiche &laquo;&nbsp;' + esc(name) + '&nbsp;&raquo;&hellip;</div>';
   try {
+    // Fetch page blocks (content) — use GET like browser
     var res = await fetch(SYNC_API_BASE + "?endpoint=" + encodeURIComponent("blocks/" + pageId + "/children"));
     if(!res.ok){ list.innerHTML = '<div class="no-results">Erreur lecture page: ' + res.status + '</div>'; return; }
     var data = await res.json();
     var blocks = data.results || [];
+    // Extract text from blocks
     var notesText = blocks.map(function(b){
       var rt = [];
       if(b.type === "paragraph" && b.paragraph) rt = b.paragraph.rich_text || [];
@@ -1700,46 +1651,26 @@ async function syncOpenPage(pageId, name, liUrl, hasMatch){
       return rt.map(function(t){return t.plain_text;}).join("");
     }).filter(Boolean).join("\n");
     if(!notesText.trim()){
-      list.innerHTML = '<div class="no-results">Fiche vide \u2014 pas de notes \u00e0 extraire.'
-        + (syncQueue.length > 1 ? '<br><button class="btn-primary" style="margin-top:12px;" onclick="syncNextInQueue()">Passer \u00e0 la suivante \u2192</button>' : '')
-        + '</div>';
+      list.innerHTML = '<div class="no-results">Fiche vide \u2014 pas de notes \u00e0 extraire.</div>';
       return;
     }
-    var skipBtn = syncQueue.length > 1 ? '<button class="btn-filters" onclick="syncNextInQueue()">Passer \u2192</button>' : '';
+    // Show raw notes + extract button
     list.innerHTML = '<div style="padding:4px;">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
-      + '<div style="display:flex;align-items:center;gap:8px;"><span class="page-title">' + esc(name) + '</span>' + progress + '</div>'
+      + '<span class="page-title">' + esc(name) + '</span>'
       + '<div style="display:flex;gap:8px;">'
-      + '<button class="btn-filters" onclick="syncFetchCalls()">&larr; Liste</button>'
-      + skipBtn
+      + '<button class="btn-filters" onclick="syncFetchCalls()">&larr; Retour</button>'
       + '<button class="btn-primary" id="sync-extract-btn" onclick="syncExtract()">Extraire avec Claude</button>'
       + '</div></div>'
       + '<div style="font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;">Notes brutes</div>'
       + '<pre id="sync-raw" style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px;font-size:12px;color:var(--t2);white-space:pre-wrap;max-height:300px;overflow-y:auto;font-family:inherit;line-height:1.6;">' + esc(notesText) + '</pre>'
       + '<div id="sync-extracted" style="margin-top:16px;"></div>'
       + '</div>';
+    // Store data for extraction
     window._syncData = { pageId: pageId, name: name, liUrl: liUrl, hasMatch: hasMatch, notes: notesText };
   } catch(e){
     list.innerHTML = '<div class="no-results">Erreur: ' + esc(e.message) + '</div>';
   }
-}
-
-function syncNextInQueue(){
-  syncQueueIdx++;
-  if(syncQueueIdx >= syncQueue.length){
-    // All done!
-    var list = document.getElementById("sync-list");
-    list.innerHTML = '<div class="no-results" style="padding:60px 20px;">'
-      + '<div style="font-size:32px;margin-bottom:12px;">\u2713</div>'
-      + '<div style="font-size:14px;font-weight:500;color:var(--gn);margin-bottom:6px;">Batch termin\u00e9 !</div>'
-      + '<div style="font-size:12px;color:var(--t3);">Toutes les fiches ont \u00e9t\u00e9 trait\u00e9es.</div>'
-      + '<button class="btn-primary" style="margin-top:16px;" onclick="syncFetchCalls()">Actualiser</button>'
-      + '</div>';
-    document.getElementById("sync-meta").textContent = "Tout est \u00e0 jour";
-    return;
-  }
-  var p = syncQueue[syncQueueIdx];
-  syncOpenPage(p.id, p.title, p.liUrl, p.matched);
 }
 
 async function syncExtract(){
@@ -1777,10 +1708,12 @@ async function syncExtract(){
     }
     var data = await res.json();
     var text = (data.content || []).map(function(c){return c.text || "";}).join("");
+    // Try to parse JSON from response
     var jsonMatch = text.match(/\{[\s\S]*\}/);
     if(!jsonMatch){ extractDiv.innerHTML = '<div class="no-results">Claude n\'a pas retourn\u00e9 de JSON valide.</div>'; btn.textContent = "R\u00e9essayer"; btn.disabled = false; return; }
     var extracted;
     try { extracted = JSON.parse(jsonMatch[0]); } catch(e){ extractDiv.innerHTML = '<div class="no-results">JSON invalide: ' + esc(e.message) + '</div>'; btn.textContent = "R\u00e9essayer"; btn.disabled = false; return; }
+    // Render extracted fields
     var fields = [
       ["Cycle de vente", extracted.cycle_vente],
       ["ACV", extracted.acv],
@@ -1805,10 +1738,9 @@ async function syncExtract(){
         + '<span style="color:var(--t1);">' + esc(String(f[1])) + '</span></div>';
     });
     html += '</div>';
-    // Import button — then auto-next
-    var nextLabel = (syncQueueIdx < syncQueue.length - 1) ? 'Importer & suivante \u2192' : 'Importer dans la fiche';
-    html += '<div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px;">'
-      + '<button class="btn-primary" onclick="syncImport()">' + nextLabel + '</button></div>';
+    // Import button
+    html += '<div style="display:flex;justify-content:flex-end;margin-top:12px;">'
+      + '<button class="btn-primary" onclick="syncImport()">Importer dans la fiche</button></div>';
     extractDiv.innerHTML = html;
     window._syncExtracted = extracted;
     btn.textContent = "Extraire avec Claude"; btn.disabled = false;
@@ -1822,36 +1754,21 @@ function syncImport(){
   var sd = window._syncData;
   var ex = window._syncExtracted;
   if(!sd || !ex) return;
+  // Find or create candidate entry
   var liSlug = sd.liUrl ? sd.liUrl.replace(/\/$/,"").split("/").pop().toLowerCase() : "";
   var cand = liSlug ? ALL.find(function(c){ return c.id === liSlug; }) : null;
   var key = liSlug || sd.name.toLowerCase().replace(/\s+/g,"-");
+  // Save extracted data to storage
   var existing = xtr[key] || {};
   existing.notionSync = ex;
   existing.notionSyncDate = new Date().toISOString().slice(0,10);
-  existing.notionPageId = sd.pageId;
   if(ex.notes_cles && !existing.notes) existing.notes = ex.notes_cles;
   xtr[key] = existing;
   try{if(window.storage)window.storage.set("c:"+key,JSON.stringify(existing)).catch(function(){});}catch(e){}
-  // Auto-advance to next in queue
-  var hasNext = syncQueueIdx < syncQueue.length - 1;
-  if(hasNext){
-    // Brief confirmation then move on
-    var extractDiv = document.getElementById("sync-extracted");
-    extractDiv.innerHTML = '<div style="padding:10px;background:var(--gn-bg);border:1px solid var(--gn-bd);border-radius:8px;font-size:12px;color:var(--gn);">'
-      + '\u2713 ' + esc(sd.name) + ' import\u00e9 \u2014 chargement de la suivante\u2026</div>';
-    setTimeout(function(){ syncNextInQueue(); }, 800);
-  } else {
-    // Last one — show completion
-    var list = document.getElementById("sync-list");
-    list.innerHTML = '<div class="no-results" style="padding:60px 20px;">'
-      + '<div style="font-size:32px;margin-bottom:12px;">\u2713</div>'
-      + '<div style="font-size:14px;font-weight:500;color:var(--gn);margin-bottom:6px;">Termin\u00e9 !</div>'
-      + '<div style="font-size:12px;color:var(--t2);margin-bottom:4px;">' + esc(sd.name) + ' import\u00e9 avec succ\u00e8s.</div>'
-      + '<div style="font-size:12px;color:var(--t3);">Toutes les fiches sont \u00e0 jour.</div>'
-      + '<button class="btn-primary" style="margin-top:16px;" onclick="syncFetchCalls()">Actualiser</button>'
-      + '</div>';
-    document.getElementById("sync-meta").textContent = "Tout est \u00e0 jour";
-  }
+  // Show confirmation
+  var extractDiv = document.getElementById("sync-extracted");
+  extractDiv.innerHTML += '<div style="margin-top:8px;padding:10px;background:var(--gn-bg);border:1px solid var(--gn-bd);border-radius:8px;font-size:12px;color:var(--gn);">'
+    + '\u2713 Import\u00e9 dans la fiche ' + esc(sd.name) + (cand ? '' : ' (nouveau)') + '</div>';
 }
 
 
