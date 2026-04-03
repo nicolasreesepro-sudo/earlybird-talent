@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{width:340px;font-family:'Inter','Segoe UI',system-ui,sans-serif;font-size:13px;background:#F4F4F8;color:#111118;padding:0;}
+.header{background:linear-gradient(135deg,#6C5CE7,#A78BFA);padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.logo{font-weight:800;font-size:15px;color:#fff;letter-spacing:-.02em;}
+.logo em{opacity:.8;font-style:normal;font-weight:400;font-size:11px;margin-left:6px;}
+.body{padding:14px 16px;}
+.not-linkedin{text-align:center;padding:40px 16px;color:#9494A8;}
+.not-linkedin .icon{font-size:24px;margin-bottom:8px;opacity:.4;}
+.not-linkedin .msg{font-size:12px;line-height:1.6;}
+
+.field{margin-bottom:10px;}
+.label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#9494A8;margin-bottom:4px;}
+.value{font-size:13px;color:#111118;font-weight:500;}
+.value-light{font-size:12px;color:#4A4A5A;}
+.input{width:100%;padding:7px 10px;border:1px solid rgba(0,0,0,.08);border-radius:8px;font-family:inherit;font-size:12px;color:#111118;background:#fff;outline:none;transition:border-color .15s;}
+.input:focus{border-color:#6C5CE7;}
+select.input{cursor:pointer;}
+
+.classified{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px;}
+.pill{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;}
+.pill-role{background:linear-gradient(135deg,#6C5CE7,#A78BFA);color:#fff;}
+.pill-sn{background:rgba(108,92,231,.08);color:#5B4BD5;border:1px solid rgba(108,92,231,.16);}
+.pill-loc{background:#F7F7FB;color:#4A4A5A;border:1px solid rgba(0,0,0,.06);}
+
+.divider{height:1px;background:rgba(0,0,0,.06);margin:12px 0;}
+
+.btn{width:100%;padding:10px;border-radius:10px;border:none;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,#6C5CE7,#A78BFA);color:#fff;box-shadow:0 2px 8px rgba(108,92,231,.25);}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(108,92,231,.35);transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.5;transform:none;box-shadow:none;cursor:not-allowed;}
+
+.status{text-align:center;padding:8px;border-radius:8px;font-size:12px;margin-top:10px;display:none;}
+.status-ok{display:block;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.16);color:#10B981;}
+.status-err{display:block;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.16);color:#EF4444;}
+.status-dup{display:block;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.16);color:#F59E0B;}
+
+.edit-row{display:flex;gap:6px;margin-bottom:8px;}
+.edit-row .input{flex:1;}
+
+.tag-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+.tag-opt{padding:3px 9px;border-radius:20px;border:1px solid rgba(0,0,0,.06);background:#fff;font-size:10px;color:#4A4A5A;cursor:pointer;transition:all .15s;}
+.tag-opt:hover{border-color:rgba(108,92,231,.3);color:#5B4BD5;}
+.tag-opt.active{background:rgba(108,92,231,.08);border-color:rgba(108,92,231,.2);color:#5B4BD5;font-weight:600;}
+
+.loading{text-align:center;padding:30px;color:#9494A8;}
+.loading .spin{display:inline-block;width:20px;height:20px;border:2px solid rgba(0,0,0,.08);border-top-color:#6C5CE7;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo">EarlybirdTalent<em>Capture</em></span>
+</div>
+
+<div id="loading" class="loading" style="display:none;">
+  <div class="spin"></div>
+  <div style="margin-top:8px;font-size:11px;">Extraction du profil...</div>
+</div>
+
+<div id="not-linkedin" class="not-linkedin" style="display:none;">
+  <div class="icon">&#x1F517;</div>
+  <div class="msg">Ouvre un profil LinkedIn<br>pour capturer un candidat.</div>
+</div>
+
+<div id="main" class="body" style="display:none;">
+  <div class="field">
+    <div class="label">Candidat</div>
+    <div class="edit-row">
+      <input class="input" id="f-first" placeholder="Pr&eacute;nom">
+      <input class="input" id="f-last" placeholder="Nom">
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="label">Poste actuel</div>
+    <input class="input" id="f-title" placeholder="Ex: Account Executive">
+  </div>
+
+  <div class="field">
+    <div class="label">Entreprise</div>
+    <input class="input" id="f-company" placeholder="Ex: Pennylane">
+  </div>
+
+  <div class="field">
+    <div class="label">Localisation</div>
+    <input class="input" id="f-location" placeholder="Ex: Paris, France">
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <div class="label">Classification auto</div>
+    <div class="classified" id="classification">
+      <span class="pill pill-role" id="cl-role">—</span>
+      <span class="pill pill-sn" id="cl-sn">—</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="label">Corriger le r&ocirc;le</div>
+    <div class="tag-row" id="role-tags"></div>
+  </div>
+
+  <div class="field">
+    <div class="label">Projet / Client (optionnel)</div>
+    <input class="input" id="f-project" placeholder="Ex: Pennylane AE">
+  </div>
+
+  <div class="divider"></div>
+
+  <button class="btn btn-primary" id="btn-add" onclick="addCandidate()">Ajouter &agrave; la base</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script src="classify.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

@@ -1,10 +1,12 @@
 {
   "rewrites": [
     { "source": "/api/notion", "destination": "/api/notion" },
-    { "source": "/api/claude", "destination": "/api/claude" }
+    { "source": "/api/claude", "destination": "/api/claude" },
+    { "source": "/api/add-candidate", "destination": "/api/add-candidate" }
   ],
   "functions": {
     "api/notion.js": { "maxDuration": 30 },
-    "api/claude.js": { "maxDuration": 60 }
+    "api/claude.js": { "maxDuration": 60 },
+    "api/add-candidate.js": { "maxDuration": 15 }
   }
 }
