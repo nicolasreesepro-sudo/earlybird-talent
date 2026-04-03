@@ -39,26 +39,33 @@ function extractFromTab() {
       return;
     }
 
-    chrome.tabs.sendMessage(tab.id, { action: "extractProfile" }, function(data) {
-      if (chrome.runtime.lastError || !data) {
-        // Content script might not be injected yet — try scripting API
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ["content.js"]
-        }, function() {
-          setTimeout(function() {
-            chrome.tabs.sendMessage(tab.id, { action: "extractProfile" }, function(data2) {
-              if (chrome.runtime.lastError || !data2) {
-                showNotLinkedIn();
-                return;
-              }
-              handleProfileData(data2);
-            });
-          }, 300);
-        });
-        return;
+    // Always inject content script first to be sure it's loaded
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["content.js"]
+    }, function() {
+      if (chrome.runtime.lastError) {
+        console.log("Injection failed:", chrome.runtime.lastError.message);
       }
-      handleProfileData(data);
+      // Wait a bit for script to initialize, then ask for data
+      setTimeout(function() {
+        chrome.tabs.sendMessage(tab.id, { action: "extractProfile" }, function(data) {
+          if (chrome.runtime.lastError || !data) {
+            // Retry once more after a longer delay
+            setTimeout(function() {
+              chrome.tabs.sendMessage(tab.id, { action: "extractProfile" }, function(data2) {
+                if (chrome.runtime.lastError || !data2 || !data2.firstName) {
+                  showNotLinkedIn();
+                  return;
+                }
+                handleProfileData(data2);
+              });
+            }, 800);
+            return;
+          }
+          handleProfileData(data);
+        });
+      }, 500);
     });
   });
 }
