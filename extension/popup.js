@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function() {
   showLoading();
   extractFromTab();
   buildRoleTags();
+  buildSnTags();
 });
 
 function showLoading() {
@@ -105,6 +106,7 @@ function runClassification() {
   }
 
   snEl.textContent = cl.seniority;
+  highlightSnTag(cl.seniority);
 }
 
 // ── Role correction tags ─────────────────────────────────────────────
@@ -130,6 +132,29 @@ function highlightRoleTag(role) {
   var tags = document.querySelectorAll("#role-tags .tag-opt");
   tags.forEach(function(t) {
     t.classList.toggle("active", t.dataset.role === role);
+  });
+}
+
+// ── Seniority correction tags ────────────────────────────────────────
+function buildSnTags() {
+  var container = document.getElementById("sn-tags");
+  ["Junior", "Mid", "Senior"].forEach(function(sn) {
+    var tag = document.createElement("span");
+    tag.className = "tag-opt";
+    tag.textContent = sn;
+    tag.dataset.sn = sn;
+    tag.addEventListener("click", function() {
+      document.getElementById("cl-sn").textContent = sn;
+      highlightSnTag(sn);
+    });
+    container.appendChild(tag);
+  });
+}
+
+function highlightSnTag(sn) {
+  var tags = document.querySelectorAll("#sn-tags .tag-opt");
+  tags.forEach(function(t) {
+    t.classList.toggle("active", t.dataset.sn === sn);
   });
 }
 

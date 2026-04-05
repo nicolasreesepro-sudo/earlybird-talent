@@ -479,10 +479,6 @@ input[type=range].fp-slider::-moz-range-thumb{
 .hero-brand{animation:fadeUp .4s cubic-bezier(.2,0,0,1) both;}
 .hero-search-wrap{animation:fadeUp .4s cubic-bezier(.2,0,0,1) .1s both;}
 .hero-hints{animation:fadeUp .4s cubic-bezier(.2,0,0,1) .2s both;}
-
-.proj-item{padding:8px 10px;border-radius:9px;cursor:pointer;margin-bottom:2px;transition:background .12s;}
-.proj-item:hover{background:var(--b1);}
-.proj-item.active{background:rgba(108,92,231,.08);border-left:3px solid var(--acc);}
 </style>
 </head>
 <body>
@@ -806,29 +802,12 @@ input[type=range].fp-slider::-moz-range-thumb{
     </div>
   </div>
 
-  <!-- PROJECTS PAGE -->
-  <div id="page-projects" class="page" style="flex-direction:column">
-    <div class="page-topbar">
-      <span class="page-title">Projets</span>
-      <span class="page-meta" id="proj-meta"></span>
-    </div>
-    <div style="display:flex;flex:1;overflow:hidden;gap:0;">
-      <!-- Left: project list -->
-      <div id="proj-sidebar" style="width:220px;flex-shrink:0;border-right:1px solid var(--b1);overflow-y:auto;padding:10px 8px;">
-        <input id="proj-search" class="fp-search" placeholder="Filtrer les projets&hellip;" oninput="renderProjectList()" style="margin-bottom:8px;width:100%;box-sizing:border-box;">
-        <div id="proj-list"></div>
-      </div>
-      <!-- Right: candidates in selected project -->
-      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-        <div id="proj-header" style="padding:14px 18px 10px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;">
-          <span id="proj-selected-name" style="font-weight:700;font-size:15px;color:var(--t1);">Sélectionne un projet</span>
-          <span id="proj-cand-count" style="font-size:11px;color:var(--t3);"></span>
-        </div>
-        <div style="padding:8px 14px;border-bottom:1px solid var(--b1);">
-          <input id="proj-cand-search" class="fp-search" placeholder="Rechercher dans ce projet&hellip;" oninput="renderProjectCandidates()" style="width:100%;box-sizing:border-box;">
-        </div>
-        <div class="page-list" id="proj-cand-list" style="flex:1;overflow-y:auto;padding:8px 14px;"></div>
-      </div>
+  <!-- PROJECTS PAGE (stub) -->
+  <div id="page-projects" class="page">
+    <div class="stub">
+      <div class="stub-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5h6l2 2h6v9H3V5z" stroke-linejoin="round"/></svg></div>
+      <div class="stub-title">Page Projets</div>
+      <div class="stub-desc">Tes missions actives avec les candidats shortlist&eacute;s. En cours de construction.</div>
     </div>
   </div>
 
@@ -889,24 +868,9 @@ input[type=range].fp-slider::-moz-range-thumb{
       <div id="m-enriched" style="display:none;background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px 14px;"></div>
       <div class="mr"><div class="ml">Contact</div><input type="date" class="di" id="mdt" onchange="onDateChange()"></div>
       <div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <div class="nl" style="margin-bottom:0;">Notes</div>
-          <button id="btn-mic" onclick="toggleDictee()" title="Dicter mes notes" style="background:none;border:1px solid rgba(0,0,0,.09);border-radius:7px;padding:3px 8px;cursor:pointer;font-size:13px;color:var(--t2);transition:all .15s;display:flex;align-items:center;gap:4px;font-family:inherit;font-size:11px;font-weight:500;">&#x1F3A4; Dicter</button>
-        </div>
-        <div id="mic-status" style="display:none;font-size:11px;padding:5px 8px;border-radius:6px;margin-bottom:6px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.12);color:#EF4444;"></div>
+        <div class="nl">Notes</div>
         <textarea id="nt" placeholder="Ajouter une note sur ce candidat…"></textarea>
         <div class="sr"><span class="sk" id="sk">&#x2713; Sauvegard&eacute;</span><button class="bs" onclick="saveNote()">Sauvegarder</button></div>
-      </div>
-      <!-- BRIEF DE CALL -->
-      <div style="margin-top:12px;">
-        <button id="btn-call-brief" onclick="preparerCall()" style="width:100%;background:linear-gradient(135deg,#6C5CE7,#A78BFA);color:#fff;border:none;font-weight:700;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .18s;box-shadow:0 2px 8px rgba(108,92,231,.25);">&#x26A1; Pr&#xe9;parer le call</button>
-        <div id="m-brief-wrap" style="display:none;margin-top:10px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <div class="nl" style="margin-bottom:0;font-size:10px;">Brief de call</div>
-            <span onclick="hideBrief()" style="cursor:pointer;color:var(--t3);font-size:11px;font-weight:500;">&#x2715; Fermer</span>
-          </div>
-          <div id="m-brief" style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.65;white-space:pre-wrap;color:var(--t1);max-height:340px;overflow-y:auto;"></div>
-        </div>
       </div>
     </div>
   </div>
@@ -986,40 +950,6 @@ function loadStorage(){
   }catch(e){}
 }
 
-// ── LOAD NEW CANDIDATES (from Chrome Extension via Notion) ────────────
-function loadNewCandidates(){
-  fetch("/api/candidates")
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(!data.candidates||!data.candidates.length) return;
-      var added=0;
-      var existingIds={};
-      ALL.forEach(function(c){ existingIds[c.id]=true; });
-      data.candidates.forEach(function(c){
-        if(!existingIds[c.id]){
-          ALL.push(c);
-          existingIds[c.id]=true;
-          added++;
-        }
-      });
-      if(added>0){
-        // Show subtle toast
-        var toast=document.getElementById("new-cands-toast");
-        if(toast){
-          toast.textContent=added+" nouveau"+(added>1?"x":"")+" candidat"+(added>1?"s":"")+" chargé"+(added>1?"s":"");
-          toast.style.opacity="1";
-          setTimeout(function(){ toast.style.opacity="0"; },4000);
-        }
-        // Refresh current page if on candidates
-        if(typeof renderCandidates==="function" && document.getElementById("page-candidates").style.display!=="none"){
-          renderCandidates();
-        }
-      }
-    })
-    .catch(function(e){ console.log("[EB] Impossible de charger les nouveaux candidats:", e.message); });
-}
-
-
 // ── NAVIGATION ───────────────────────────────────────────────────────
 function navTo(page){
   currentPage=page;
@@ -1028,8 +958,6 @@ function navTo(page){
   var pg=document.getElementById("page-"+page);
   if(pg)pg.style.display="flex";
   if(page==="search"){document.getElementById("hero-input").focus();}
-  if(page==="projects"){renderProjectList();}
-  if(page==="candidates"){renderCandidates();}
   if(page==="companies"){renderCompanies();}if(page==="candidates"){renderCandidates();}
 }
 
@@ -1335,226 +1263,14 @@ function openModal(id){
   document.getElementById("ov").classList.add("op");
   setTimeout(function(){document.getElementById("nt").focus();},60);
 }
-function closeModal(){document.getElementById("ov").classList.remove("op");acid=null;hideBrief();}
-function hideBrief(){
-  var w=document.getElementById("m-brief-wrap");
-  if(w)w.style.display="none";
-  var b=document.getElementById("btn-call-brief");
-  if(b){b.textContent="⚡ Préparer le call";b.disabled=false;}
-}
-function preparerCall(){
+function closeModal(){document.getElementById("ov").classList.remove("op");acid=null;}
+function onDateChange(){if(acid)saveNote(true);}
+function saveNote(silent){
   if(!acid)return;
-  var c=ALL.find(function(x){return x.id===acid;});
-  if(!c)return;
-  var ex=xtr[acid]||{};
-  var btn=document.getElementById("btn-call-brief");
-  var wrap=document.getElementById("m-brief-wrap");
-  var briefEl=document.getElementById("m-brief");
-  btn.disabled=true;
-  btn.textContent="⏳ Génération en cours…";
-  wrap.style.display="block";
-  briefEl.textContent="Interrogation de Claude…";
-
-  // Build candidate data string
-  var ns=ex.notionSync||{};
-  var co=COMPANY_DB[c.co]||{};
-  var candInfo=[
-    "Prénom Nom : "+c.f+" "+c.l,
-    "Poste actuel : "+(c.jt||c.hl||"—"),
-    "Entreprise : "+(c.co||"—"),
-    "Localisation : "+(c.lo||"—"),
-    "Famille de rôle : "+(c.rf||"—"),
-    "Séniorité : "+(c.sn||"—"),
-    "Projets assignés : "+(c.pj&&c.pj.length?c.pj.join(", "):"—"),
-    "Notes Nicolas : "+(ex.notes||"—"),
-    "Dernier contact : "+(ex.lastContact||"—"),
-    "",
-    "--- Données structurées (si disponibles) ---",
-    "Ranking : "+(ns.ranking||"—"),
-    "Disponibilité : "+(ns.dispo||"—"),
-    "Préavis : "+(ns.preavis||"—"),
-    "Package actuel : "+(ns.package_actuel||"—"),
-    "Package souhaité : "+(ns.package_souhaite||"—"),
-    "Motivation départ : "+(ns.motivation_depart||"—"),
-    "Cycle de vente : "+(ns.cycle_vente||"—"),
-    "ACV : "+(ns.acv||"—"),
-    "Langues : "+(ns.langues?ns.langues.join(", "):"—"),
-    "Pros : "+(ns.pros?ns.pros.join(", "):"—"),
-    "Cons : "+(ns.cons?ns.cons.join(", "):"—"),
-    "Dealbreakers : "+(ns.dealbreakers||"—"),
-    "Résumé précédent : "+(ns.notes_cles||"—"),
-    "",
-    "--- Entreprise actuelle ("+( c.co||"?")+" ) ---",
-    "Secteur : "+(co.macro||"—")+(co.ind&&co.ind.length?" / "+co.ind.join(", "):""),
-    "Taille : "+(co.size||"—"),
-    "Stage : "+(co.stage||"—"),
-    "Nature : "+(co.nat||"—")
-  ].join("\n");
-
-  var prompt="Tu es l'assistant de Nicolas, recruteur GTM spécialisé Pre-Seed → Series A (Paris).\n"+
-"Prépare un brief de call pour ce candidat.\n\n"+
-candInfo+"\n\n"+
-"Le brief doit contenir :\n"+
-"1. RÉSUMÉ PROFIL — 2-3 lignes sur qui est cette personne\n"+
-"2. POINTS À CREUSER — questions spécifiques basées sur ce qu'on sait et ce qui manque\n"+
-"3. DONNÉES MANQUANTES — ce qu'on n'a pas encore (salaire ? dispo ? motivation départ ? cycle de vente ?)\n"+
-"4. CONTEXTE ENTREPRISE — ce qu'on sait de sa boîte actuelle\n"+
-"5. FIT POTENTIEL — si assigné à un projet, évaluer le fit\n\n"+
-"Format : concis, bullet points, en français.";
-
-  fetch("/api/claude",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1200,messages:[{role:"user",content:prompt}]})
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    if(data.error){briefEl.textContent="Erreur : "+data.error;btn.disabled=false;btn.textContent="⚡ Préparer le call";return;}
-    var text=data.content||data.text||data.completion||"";
-    if(!text&&data.content&&Array.isArray(data.content))text=data.content.map(function(b){return b.text||"";}).join("\n");
-    briefEl.textContent=text||"Réponse vide de Claude.";
-    btn.disabled=false;
-    btn.textContent="↺ Regénérer";
-  })
-  .catch(function(e){
-    briefEl.textContent="Erreur réseau : "+e.message;
-    btn.disabled=false;
-    btn.textContent="⚡ Préparer le call";
-  });
-}
-
-// ── DICTÉE VOCALE POST-CALL ────────────────────────────────────────
-var _recognition = null;
-var _isListening = false;
-
-function toggleDictee(){
-  if(_isListening){ stopDictee(); return; }
-  startDictee();
-}
-
-function startDictee(){
-  var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRecognition){
-    showMicStatus("err","Votre navigateur ne supporte pas la dictée. Utilisez Chrome ou Edge.");
-    return;
-  }
-  var btn=document.getElementById("btn-mic");
-  var statusEl=document.getElementById("mic-status");
-  _recognition=new SpeechRecognition();
-  _recognition.lang="fr-FR";
-  _recognition.continuous=true;
-  _recognition.interimResults=true;
-  _recognition.maxAlternatives=1;
-  var interim="";
-  var finalText="";
-  _recognition.onstart=function(){
-    _isListening=true;
-    btn.innerHTML="\u23f9 Arrêter";
-    btn.style.color="#EF4444";
-    btn.style.borderColor="rgba(239,68,68,.25)";
-    statusEl.style.display="block";
-    statusEl.style.background="rgba(16,185,129,.06)";
-    statusEl.style.borderColor="rgba(16,185,129,.12)";
-    statusEl.style.color="#10B981";
-    statusEl.textContent="\u25cf Dictée en cours\u2026";
-  };
-  _recognition.onresult=function(e){
-    interim="";
-    for(var i=e.resultIndex;i<e.results.length;i++){
-      if(e.results[i].isFinal) finalText+=e.results[i][0].transcript+" ";
-      else interim+=e.results[i][0].transcript;
-    }
-    statusEl.textContent="\u25cf "+(finalText+interim||"En attente de parole\u2026");
-  };
-  _recognition.onerror=function(e){
-    var msg=e.error==="not-allowed"?"Microphone refusé. Autorisez dans Brave/Chrome."
-           :e.error==="no-speech"?"Aucune parole détectée."
-           :"Erreur : "+e.error;
-    showMicStatus("err",msg);
-    stopDictee();
-    finalText="";
-  };
-  _recognition.onend=function(){
-    _isListening=false;
-    var b=document.getElementById("btn-mic");
-    if(b){b.innerHTML="\uD83C\uDFA4 Dicter";b.style.color="";b.style.borderColor="";}
-    if(finalText.trim()){
-      var nt=document.getElementById("nt");
-      if(nt)nt.value=(nt.value?nt.value+"\n\n":"")+"[Dicté]\n"+finalText.trim();
-      showMicStatus("ok","Transcription terminée — structuration en cours\u2026");
-      structurerNotes(finalText.trim());
-      finalText="";
-    } else {
-      var se=document.getElementById("mic-status");
-      if(se)se.style.display="none";
-    }
-  };
-  _recognition.start();
-}
-
-function stopDictee(){
-  if(_recognition){ try{_recognition.stop();}catch(e){} _recognition=null; }
-  _isListening=false;
-  var b=document.getElementById("btn-mic");
-  if(b){b.innerHTML="\uD83C\uDFA4 Dicter";b.style.color="";b.style.borderColor="";}
-}
-
-function showMicStatus(type,msg){
-  var el=document.getElementById("mic-status");
-  if(!el)return;
-  el.style.display="block";
-  if(type==="err"){el.style.background="rgba(239,68,68,.06)";el.style.borderColor="rgba(239,68,68,.12)";el.style.color="#EF4444";}
-  else if(type==="ok"){el.style.background="rgba(16,185,129,.06)";el.style.borderColor="rgba(16,185,129,.12)";el.style.color="#10B981";}
-  else{el.style.background="rgba(0,0,0,.04)";el.style.borderColor="rgba(0,0,0,.08)";el.style.color="var(--t2)";}
-  el.textContent=msg;
-}
-
-function structurerNotes(transcription){
-  if(!acid)return;
-  var prompt="Voici la transcription de notes vocales post-call d'un recruteur GTM.\n"
-    +"Extrais les données structurées suivantes (null si non mentionné) :\n\n"
-    +"- ranking (1 à 4, 4 = top)\n"
-    +"- cycle_vente (ex: \"6-12 mois\", \"SaaS mid-market\")\n"
-    +"- acv (average contract value)\n"
-    +"- dispo (disponibilité)\n"
-    +"- preavis (préavis)\n"
-    +"- langues (array)\n"
-    +"- package_actuel\n"
-    +"- package_souhaite\n"
-    +"- motivation_depart\n"
-    +"- pros (array de points positifs)\n"
-    +"- cons (array de points négatifs)\n"
-    +"- dealbreakers\n"
-    +"- notes_cles (résumé en 2-3 phrases)\n\n"
-    +"Transcription :\n"+transcription+"\n\n"
-    +"Retourne un JSON valide uniquement, sans markdown, sans texte autour.";
-
-  fetch("/api/claude",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:800,messages:[{role:"user",content:prompt}]})
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    var text="";
-    if(data.content&&Array.isArray(data.content))text=data.content.map(function(b){return b.text||"";}).join("");
-    else if(data.content)text=String(data.content);
-    else if(data.text)text=data.text;
-    if(!text){showMicStatus("err","Réponse vide de Claude");return;}
-    text=text.replace(/^```(?:json)?\n?/i,"").replace(/\n?```$/,"").trim();
-    var parsed;
-    try{parsed=JSON.parse(text);}catch(e){showMicStatus("err","JSON invalide : "+text.substring(0,80));return;}
-    if(!xtr[acid])xtr[acid]={};
-    var today=new Date().toISOString().slice(0,10);
-    xtr[acid].notionSync=parsed;
-    xtr[acid].notionSyncDate=today;
-    if(!xtr[acid].lastContact)xtr[acid].lastContact=today;
-    try{if(window.storage)window.storage.set("c:"+acid,JSON.stringify(xtr[acid])).catch(function(){});}catch(e){}
-    openModal(acid);
-    showMicStatus("ok","\u2713 Données structurées enregistrées !");
-    setTimeout(function(){var el=document.getElementById("mic-status");if(el)el.style.display="none";},3000);
-  })
-  .catch(function(e){showMicStatus("err","Erreur structuration : "+e.message);});
+  var n=document.getElementById("nt").value,d=document.getElementById("mdt").value;
+  xtr[acid]={notes:n,lastContact:d};
+  try{if(window.storage)window.storage.set("c:"+acid,JSON.stringify({notes:n,lastContact:d})).catch(function(){});}catch(e){}
+  if(!silent){var sk=document.getElementById("sk");sk.classList.add("sh");setTimeout(function(){sk.classList.remove("sh");},2000);}
 }
 
 // ── COMPANIES PAGE ───────────────────────────────────────────────────
@@ -2292,108 +2008,11 @@ function renderCandidates(){
   });
 }
 
-
-// ── PROJECTS PAGE ────────────────────────────────────────────────────
-var currentProject = null;
-
-function getProjects(){
-  var map = {};
-  ALL.forEach(function(c){
-    if(!c.pj || !c.pj.length) return;
-    c.pj.forEach(function(p){
-      if(!p) return;
-      if(!map[p]) map[p] = { name:p, candidates:[] };
-      map[p].candidates.push(c);
-    });
-  });
-  // Sort: most candidates first
-  return Object.values(map).sort(function(a,b){ return b.candidates.length - a.candidates.length; });
-}
-
-function renderProjectList(){
-  var projects = getProjects();
-  var q = (document.getElementById("proj-search")||{}).value || "";
-  if(q) projects = projects.filter(function(p){ return p.name.toLowerCase().includes(q.toLowerCase()); });
-
-  var meta = document.getElementById("proj-meta");
-  if(meta) meta.textContent = projects.length + " projet" + (projects.length > 1 ? "s" : "");
-
-  var list = document.getElementById("proj-list");
-  if(!list) return;
-
-  list.innerHTML = projects.map(function(p){
-    var active = currentProject === p.name;
-    return '<div class="proj-item' + (active ? " active" : "") + '" onclick="selectProject(' + JSON.stringify(p.name) + ')">'
-      + '<div style="font-size:13px;font-weight:' + (active?"700":"500") + ';color:var(--t1);line-height:1.3;">' + esc(p.name) + '</div>'
-      + '<div style="font-size:11px;color:var(--t3);margin-top:2px;">' + p.candidates.length + ' candidat' + (p.candidates.length > 1 ? 's' : '') + '</div>'
-      + '</div>';
-  }).join('');
-
-  // Auto-select first project if none selected
-  if(!currentProject && projects.length) selectProject(projects[0].name);
-}
-
-function selectProject(name){
-  currentProject = name;
-  // Update sidebar active state
-  document.querySelectorAll(".proj-item").forEach(function(el){
-    el.classList.toggle("active", el.textContent.includes(name));
-  });
-  var nameEl = document.getElementById("proj-selected-name");
-  if(nameEl) nameEl.textContent = name;
-  // Clear candidate search
-  var cs = document.getElementById("proj-cand-search");
-  if(cs) cs.value = "";
-  renderProjectCandidates();
-}
-
-function renderProjectCandidates(){
-  if(!currentProject) return;
-  var q = ((document.getElementById("proj-cand-search")||{}).value || "").toLowerCase();
-
-  var candidates = ALL.filter(function(c){
-    return c.pj && c.pj.indexOf(currentProject) !== -1;
-  });
-
-  if(q){
-    candidates = candidates.filter(function(c){
-      return (c.f+" "+c.l).toLowerCase().includes(q)
-        || (c.jt||"").toLowerCase().includes(q)
-        || (c.co||"").toLowerCase().includes(q)
-        || (c.rf||"").toLowerCase().includes(q);
-    });
-  }
-
-  // Sort: last contact first (with notes), then alphabetical
-  candidates.sort(function(a,b){
-    var ea = xtr[a.id]||{}, eb = xtr[b.id]||{};
-    if(ea.lastContact && !eb.lastContact) return -1;
-    if(!ea.lastContact && eb.lastContact) return 1;
-    if(ea.lastContact && eb.lastContact) return eb.lastContact.localeCompare(ea.lastContact);
-    return a.f.localeCompare(b.f);
-  });
-
-  var countEl = document.getElementById("proj-cand-count");
-  if(countEl) countEl.textContent = candidates.length + " candidat" + (candidates.length > 1 ? "s" : "");
-
-  var list = document.getElementById("proj-cand-list");
-  if(!list) return;
-
-  if(!candidates.length){
-    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--t3);font-size:13px;">Aucun candidat' + (q ? ' pour "' + esc(q) + '"' : '') + '</div>';
-    return;
-  }
-
-  list.innerHTML = candidates.map(function(c){ return crd(c); }).join("");
-  bindCards(list);
-}
-
 // ── BOOT ─────────────────────────────────────────────────────────────
 initTheme();
 initSearchPage();
 navTo("search");
 loadStorage();
-loadNewCandidates();
 updateRangeFill();
 updateRangeFill();
 
@@ -2421,7 +2040,5 @@ updateRangeFill();
   }catch(e){}
 })();
 </script>
-
-<div id="new-cands-toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#6C5CE7,#A78BFA);color:#fff;padding:8px 18px;border-radius:20px;font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(108,92,231,.3);z-index:9999;opacity:0;transition:opacity .4s ease;pointer-events:none;"></div>
 </body>
 </html>

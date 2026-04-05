@@ -2,11 +2,13 @@
   "rewrites": [
     { "source": "/api/notion", "destination": "/api/notion" },
     { "source": "/api/claude", "destination": "/api/claude" },
-    { "source": "/api/add-candidate", "destination": "/api/add-candidate" }
+    { "source": "/api/add-candidate", "destination": "/api/add-candidate" },
+    { "source": "/api/candidates", "destination": "/api/candidates" }
   ],
   "functions": {
     "api/notion.js": { "maxDuration": 30 },
     "api/claude.js": { "maxDuration": 60 },
-    "api/add-candidate.js": { "maxDuration": 15 }
+    "api/add-candidate.js": { "maxDuration": 15 },
+    "api/candidates.js": { "maxDuration": 20 }
   }
 }

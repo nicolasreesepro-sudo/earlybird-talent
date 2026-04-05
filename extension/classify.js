@@ -81,8 +81,10 @@ var RF_SHORT = {
 
 var ALL_ROLES = [
   "Bottom of funnel","Top of funnel","CSM","Farmer","Ops",
-  "CoS/FA","Growth/Marketing","Partnerships","RevOps","Pre-Sales","Sales Manager"
+  "CoS/FA","Growth/Marketing","Partnerships","RevOps","Pre-Sales","Sales Manager","Other"
 ];
+
+RF_SHORT["Other"] = "Other";
 
 // Seniority keywords
 // Use regex word boundaries to avoid partial matches (e.g. "cco" in "account")
@@ -107,8 +109,8 @@ function classifyTitle(title) {
       bestLen = kw.length;
     }
   }
-  result.role = bestMatch;
-  result.roleShort = bestMatch ? (RF_SHORT[bestMatch] || bestMatch) : null;
+  result.role = bestMatch || "Other";
+  result.roleShort = bestMatch ? (RF_SHORT[bestMatch] || bestMatch) : "Other";
 
   // Seniority from title keywords (regex with word boundaries)
   if (SN_SENIOR_RE.test(title)) {
