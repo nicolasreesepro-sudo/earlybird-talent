@@ -404,12 +404,15 @@
 
   // ── Add candidate (single) ────────────────────────────────────────
   function addCandidate() {
+    console.log("[EB] addCandidate() déclenché");
     var btn    = document.getElementById("eb-btn-add");
     var status = document.getElementById("eb-status");
     var first  = document.getElementById("eb-first").value.trim();
     var last   = document.getElementById("eb-last").value.trim();
+    console.log("[EB] first="+first+" last="+last);
     if (!first || !last) { showStatus("err","Prénom et nom requis"); return; }
     btn.disabled = true;
+    btn.textContent = "⏳ Envoi…";
     if (status) { status.className = "eb-status"; status.style.display = "none"; }
 
     var candidate = {
@@ -428,6 +431,7 @@
     };
 
     function doFetch(captured) {
+      console.log("[EB] doFetch() → POST", API_BASE+"/api/add-candidate");
       fetch(API_BASE+"/api/add-candidate", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -436,8 +440,18 @@
       .then(function(r){ return r.json(); })
       .then(function(data) {
         if (data.error) { showStatus("err", data.error); btn.disabled=false; return; }
+        console.log("[EB] Succès !");
+        btn.textContent = "✓ Ajouté à la base !";
+        btn.style.background = "linear-gradient(135deg,#10B981,#34D399)";
+        setTimeout(function(){
+          btn.textContent = "Ajouter à la base";
+          btn.style.background = "";
+        }, 3000);
         showStatus("ok","✓ Ajouté à la base !");
         btn.disabled=false;
+        // Scroll vers le bas du panneau pour que le message soit visible
+        var body = document.getElementById("eb-body");
+        if(body) body.scrollTop = body.scrollHeight;
         // Save to storage (best-effort)
         try {
           captured.push({ slug:candidate.slug, name:first+" "+last, date:candidate.capturedAt });
@@ -445,8 +459,13 @@
         } catch(e) {}
       })
       .catch(function(e){
+        console.log("[EB] Erreur fetch:", e.message);
+        btn.textContent = "⚠ " + e.message;
+        setTimeout(function(){ btn.textContent = "Ajouter à la base"; btn.style.background = ""; }, 4000);
         showStatus("err","Erreur réseau : "+e.message);
         btn.disabled=false;
+        var body = document.getElementById("eb-body");
+        if(body) body.scrollTop = body.scrollHeight;
       });
     }
 
@@ -455,7 +474,7 @@
     var storageCallbackFired = false;
     var storageFallbackTimer = setTimeout(function() {
       if (!storageCallbackFired) {
-        console.log("[EB] Storage timeout — context probablement invalidé, envoi direct");
+        console.log("[EB] Storage timeout — context probablement invalidé, envoi direct"); btn.textContent = "⏳ Envoi direct…";
         doFetch([]);
       }
     }, 1500);
