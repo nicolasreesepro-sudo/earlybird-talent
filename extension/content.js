@@ -410,7 +410,7 @@
     var last   = document.getElementById("eb-last").value.trim();
     if (!first || !last) { showStatus("err","Prénom et nom requis"); return; }
     btn.disabled = true;
-    status.className = "eb-status"; status.style.display = "none";
+    if (status) { status.className = "eb-status"; status.style.display = "none"; }
 
     var candidate = {
       firstName:  first,
@@ -427,11 +427,7 @@
       capturedAt: new Date().toISOString()
     };
 
-    chrome.storage.local.get(["captured"], function(result) {
-      var captured = result.captured || [];
-      if (candidate.slug && captured.some(function(c){ return c.slug===candidate.slug; })) {
-        showStatus("dup","Candidat déjà capturé !"); btn.disabled=false; return;
-      }
+    function doFetch(captured) {
       fetch(API_BASE+"/api/add-candidate", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
@@ -440,17 +436,39 @@
       .then(function(r){ return r.json(); })
       .then(function(data) {
         if (data.error) { showStatus("err", data.error); btn.disabled=false; return; }
-        captured.push({ slug:candidate.slug, name:first+" "+last, date:candidate.capturedAt });
-        chrome.storage.local.set({ captured:captured });
         showStatus("ok","✓ Ajouté à la base !");
         btn.disabled=false;
+        // Save to storage (best-effort)
+        try {
+          captured.push({ slug:candidate.slug, name:first+" "+last, date:candidate.capturedAt });
+          chrome.storage.local.set({ captured:captured });
+        } catch(e) {}
       })
-      .catch(function(e){ showStatus("err","Erreur réseau"); btn.disabled=false; });
-    });
+      .catch(function(e){
+        showStatus("err","Erreur réseau : "+e.message);
+        btn.disabled=false;
+      });
+    }
+
+    // Try storage dedup — but don't block on failure
+    try {
+      chrome.storage.local.get(["captured"], function(result) {
+        var captured = (result && result.captured) ? result.captured : [];
+        if (candidate.slug && captured.some(function(c){ return c.slug===candidate.slug; })) {
+          showStatus("dup","Candidat déjà capturé !"); btn.disabled=false; return;
+        }
+        doFetch(captured);
+      });
+    } catch(e) {
+      // Extension context invalidated or storage unavailable — skip dedup, still send
+      console.log("[EB] Storage unavailable, skipping dedup:", e.message);
+      doFetch([]);
+    }
   }
 
   function showStatus(type, msg) {
     var el = document.getElementById("eb-status");
+    if (!el) return;
     el.className = "eb-status "+type; el.textContent = msg;
   }
 
