@@ -450,9 +450,26 @@
       });
     }
 
-    // Try storage dedup — but don't block on failure
+    // Try storage dedup — with timeout fallback in case context is invalidated
+    // (invalidated contexts don't always throw — they silently drop the callback)
+    var storageCallbackFired = false;
+    var storageFallbackTimer = setTimeout(function() {
+      if (!storageCallbackFired) {
+        console.log("[EB] Storage timeout — context probablement invalidé, envoi direct");
+        doFetch([]);
+      }
+    }, 1500);
+
     try {
+      // Quick check: if chrome.runtime.id is undefined, context is already dead
+      if (!chrome.runtime || !chrome.runtime.id) {
+        clearTimeout(storageFallbackTimer);
+        doFetch([]);
+        return;
+      }
       chrome.storage.local.get(["captured"], function(result) {
+        storageCallbackFired = true;
+        clearTimeout(storageFallbackTimer);
         var captured = (result && result.captured) ? result.captured : [];
         if (candidate.slug && captured.some(function(c){ return c.slug===candidate.slug; })) {
           showStatus("dup","Candidat déjà capturé !"); btn.disabled=false; return;
@@ -460,8 +477,9 @@
         doFetch(captured);
       });
     } catch(e) {
-      // Extension context invalidated or storage unavailable — skip dedup, still send
-      console.log("[EB] Storage unavailable, skipping dedup:", e.message);
+      storageCallbackFired = true;
+      clearTimeout(storageFallbackTimer);
+      console.log("[EB] Storage unavailable, envoi direct:", e.message);
       doFetch([]);
     }
   }
