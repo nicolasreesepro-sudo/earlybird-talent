@@ -431,42 +431,55 @@
     };
 
     function doFetch(captured) {
-      console.log("[EB] doFetch() → POST", API_BASE+"/api/add-candidate");
-      fetch(API_BASE+"/api/add-candidate", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify(candidate)
-      })
-      .then(function(r){ return r.json(); })
-      .then(function(data) {
-        if (data.error) { showStatus("err", data.error); btn.disabled=false; return; }
-        console.log("[EB] Succès !");
-        btn.textContent = "✓ Ajouté à la base !";
-        btn.style.background = "linear-gradient(135deg,#10B981,#34D399)";
-        setTimeout(function(){
-          btn.textContent = "Ajouter à la base";
-          btn.style.background = "";
-        }, 3000);
-        showStatus("ok","✓ Ajouté à la base !");
-        btn.disabled=false;
-        // Scroll vers le bas du panneau pour que le message soit visible
-        var body = document.getElementById("eb-body");
-        if(body) body.scrollTop = body.scrollHeight;
-        // Save to storage (best-effort)
-        try {
-          captured.push({ slug:candidate.slug, name:first+" "+last, date:candidate.capturedAt });
-          chrome.storage.local.set({ captured:captured });
-        } catch(e) {}
-      })
-      .catch(function(e){
-        console.log("[EB] Erreur fetch:", e.message);
-        btn.textContent = "⚠ " + e.message;
-        setTimeout(function(){ btn.textContent = "Ajouter à la base"; btn.style.background = ""; }, 4000);
-        showStatus("err","Erreur réseau : "+e.message);
-        btn.disabled=false;
-        var body = document.getElementById("eb-body");
-        if(body) body.scrollTop = body.scrollHeight;
+      console.log("[EB] doFetch() → via background service worker");
+      // On passe par le background service worker pour éviter le CORS du content script
+      chrome.runtime.sendMessage({ type: "ADD_CANDIDATE", payload: candidate }, function(response) {
+        if (chrome.runtime.lastError) {
+          // Background script unavailable → fallback fetch direct
+          console.log("[EB] sendMessage failed, fallback fetch direct:", chrome.runtime.lastError.message);
+          fetch(API_BASE+"/api/add-candidate", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify(candidate)
+          })
+          .then(function(r){ return r.json(); })
+          .then(function(data) { handleResponse(data, captured); })
+          .catch(function(e){ handleError(e.message); });
+          return;
+        }
+        if (!response) { handleError("Pas de réponse du service worker"); return; }
+        if (!response.ok) { handleError(response.error || "Erreur inconnue"); return; }
+        handleResponse(response.data, captured);
       });
+    }
+
+    function handleResponse(data, captured) {
+      if (data && data.error) { showStatus("err", data.error); btn.disabled=false; return; }
+      console.log("[EB] Succès !");
+      btn.textContent = "✓ Ajouté à la base !";
+      btn.style.background = "linear-gradient(135deg,#10B981,#34D399)";
+      setTimeout(function(){
+        btn.textContent = "Ajouter à la base";
+        btn.style.background = "";
+      }, 3000);
+      showStatus("ok","✓ Ajouté à la base !");
+      btn.disabled=false;
+      var body = document.getElementById("eb-body");
+      if(body) body.scrollTop = body.scrollHeight;
+      try {
+        captured.push({ slug:candidate.slug, name:first+" "+last, date:candidate.capturedAt });
+        chrome.storage.local.set({ captured:captured });
+      } catch(e) {}
+    }
+
+    function handleError(msg) {
+      console.log("[EB] Erreur:", msg);
+      btn.textContent = "⚠ Erreur";
+      setTimeout(function(){ btn.textContent = "Ajouter à la base"; btn.style.background = ""; }, 4000);
+      showStatus("err","Erreur : "+msg);
+      btn.disabled=false;
+      var body = document.getElementById("eb-body");
+      if(body) body.scrollTop = body.scrollHeight;
     }
 
     // Try storage dedup — with timeout fallback in case context is invalidated
@@ -735,15 +748,10 @@
           candidate.seniority  = cl.seniority;
         }
 
-        // Send to API
-        fetch(API_BASE + "/api/add-candidate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(candidate)
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (!data.error) {
+        // Send to API via background service worker (évite CORS Brave Shields)
+        chrome.runtime.sendMessage({ type: "ADD_CANDIDATE", payload: candidate }, function(response) {
+          var ok = response && response.ok && response.data && !response.data.error;
+          if (ok) {
             added++;
             captured.push({
               slug: candidate.slug,
@@ -754,10 +762,6 @@
           } else {
             skipped++;
           }
-          setTimeout(function() { processCard(i + 1); }, 200);
-        })
-        .catch(function() {
-          skipped++;
           setTimeout(function() { processCard(i + 1); }, 200);
         });
       }
